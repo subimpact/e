@@ -91,10 +91,6 @@
             {
               "title": "Use Pi Packages",
               "path": "packages.md"
-            },
-            {
-              "title": "Connect MCP Servers",
-              "path": "mcp.md"
             }
           ]
         },

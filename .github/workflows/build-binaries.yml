@@ -205,7 +205,7 @@ jobs:
         run: |
           "${{ steps.binary.outputs.binary }}" --help
           "${{ steps.binary.outputs.binary }}" --version
-          node scripts/smoke-test-codemode-binary.mjs "${{ steps.binary.outputs.binary }}"
+
 
   stage-github-release:
     runs-on: ubuntu-latest
