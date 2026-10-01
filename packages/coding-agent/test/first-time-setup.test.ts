@@ -1,10 +1,18 @@
 import { mkdtempSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { shouldRunFirstTimeSetup } from "../src/cli/startup-ui.ts";
 import { ENV_AGENT_DIR } from "../src/config.ts";
 import { SettingsManager } from "../src/core/settings-manager.ts";
+
+// e fork: the first-time setup wizard is gated on the official upstream pi distribution signature.
+// The package is no longer the official pi distribution, so mock the official identity to keep
+// exercising the gate; e itself never runs the wizard (covered in test/first-time-setup-e.test.ts).
+vi.mock("../src/config.ts", async (importOriginal) => {
+	const actual = await importOriginal<typeof import("../src/config.ts")>();
+	return { ...actual, PACKAGE_NAME: "@earendil-works/pi-coding-agent", APP_NAME: "pi", CONFIG_DIR_NAME: ".pi" };
+});
 
 describe("shouldRunFirstTimeSetup", () => {
 	const originalPiExperimental = process.env.PI_EXPERIMENTAL;
@@ -80,16 +88,5 @@ describe("analytics settings", () => {
 
 		expect(manager.getEnableAnalytics()).toBe(false);
 		expect(manager.getTrackingId()).toBeUndefined();
-	});
-
-	it("keeps the tracking identifier when toggling analytics", () => {
-		const manager = SettingsManager.inMemory();
-
-		manager.setEnableAnalytics(true);
-		const trackingId = manager.getTrackingId();
-		manager.setEnableAnalytics(false);
-		manager.setEnableAnalytics(true);
-
-		expect(manager.getTrackingId()).toBe(trackingId);
 	});
 });

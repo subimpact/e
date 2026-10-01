@@ -424,9 +424,9 @@ export class AgentSession {
 	private _extensionRunnerRef?: { current?: ExtensionRunner };
 	private _initialActiveToolNames?: string[];
 	/**
-	 * Tools of the restored or reloaded loadout that are not registered yet, such as tools of MCP
-	 * servers that are still connecting. They are activated when they are registered, and dropped when
-	 * `setActiveToolsByName()` deactivates a tool or the next agent run starts.
+	 * Tools of the restored or reloaded loadout that are not registered yet. They are activated when
+	 * they are registered, and dropped when `setActiveToolsByName()` deactivates a tool or the next
+	 * agent run starts.
 	 */
 	private _pendingToolNames = new Set<string>();
 	private _usesDefaultTools: boolean;
@@ -1446,10 +1446,7 @@ export class AgentSession {
 		return this._retryAttempt;
 	}
 
-	/**
-	 * Get the names of currently active tools, which are the tools declared to the model.
-	 * Tools with `codemode` or `deferred` exposure are callable from other tools without being active.
-	 */
+	/** Get the names of the currently active tools, which are the tools declared to the model. */
 	getActiveToolNames(): string[] {
 		return this.agent.state.tools.map((t) => t.name);
 	}
@@ -1489,7 +1486,6 @@ export class AgentSession {
 		const previous = this.getActiveToolNames();
 		this._setActiveTools(toolNames);
 		// A loadout that deactivates a tool replaces the restored one, whose pending tools are dropped.
-		// One that only adds tools, like activating tool_search, keeps them.
 		const active = new Set(this.getActiveToolNames());
 		if (previous.some((name) => !active.has(name))) this._pendingToolNames.clear();
 	}
@@ -1508,15 +1504,11 @@ export class AgentSession {
 		return this._toolDefinitions.get(name)?.definition.exposure ?? "direct";
 	}
 
-	/**
-	 * Tools callable through `ctx.executeTool()`: the active `direct` tools and every registered
-	 * `codemode` or `deferred` tool.
-	 */
+	/** Tools callable through `ctx.executeTool()`: the active `direct` tools. */
 	private _getCallableTools(active: ReadonlySet<string> = new Set(this.getActiveToolNames())): AgentTool[] {
-		return [...this._toolRegistry.values()].filter((tool) => {
-			const exposure = this._getToolExposure(tool.name);
-			return exposure === "codemode" || exposure === "deferred" || (exposure === "direct" && active.has(tool.name));
-		});
+		return [...this._toolRegistry.values()].filter(
+			(tool) => this._getToolExposure(tool.name) === "direct" && active.has(tool.name),
+		);
 	}
 
 	/**
@@ -3230,7 +3222,6 @@ export class AgentSession {
 
 		this._applyExtensionBindings(this._extensionRunner);
 		await this._extensionRunner.emit(this._sessionStartEvent);
-		this._extensionRunner.reportUnhandledMcpServers();
 		await this.extendResourcesFromExtensions(this._sessionStartEvent.reason === "reload" ? "reload" : "startup");
 	}
 
@@ -3628,7 +3619,7 @@ export class AgentSession {
 					(name) => !previousDefaultTools.has(name),
 				)
 			: [];
-		// Tools the new extensions register later, such as MCP tools, are pending until then.
+		// Tools the new extensions register later are pending until then.
 		for (const name of this.getActiveToolNames()) this._pendingToolNames.add(name);
 		this._buildRuntime({
 			activeToolNames: [...this.getActiveToolNames(), ...addedDefaultTools],
@@ -3644,7 +3635,6 @@ export class AgentSession {
 		if (hasBindings) {
 			await options?.beforeSessionStart?.();
 			await this._extensionRunner.emit({ type: "session_start", reason: "reload" });
-			this._extensionRunner.reportUnhandledMcpServers();
 			await this.extendResourcesFromExtensions("reload");
 		}
 	}

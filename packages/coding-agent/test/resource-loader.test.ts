@@ -1039,15 +1039,15 @@ export default function(pi: ExtensionAPI) {
 		});
 
 		it("should leave out replaceable extensions whose names another extension registers", async () => {
-			// A third-party MCP extension registering /mcp replaces the built-in one instead of both running.
+			// A third-party extension registering /weather replaces the built-in one instead of both running.
 			const globalExtDir = join(agentDir, "extensions");
 			mkdirSync(globalExtDir, { recursive: true });
 			writeFileSync(
-				join(globalExtDir, "other-mcp.ts"),
+				join(globalExtDir, "other-weather.ts"),
 				`
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 export default function(pi: ExtensionAPI) {
-  pi.registerCommand("mcp", { description: "other mcp", handler: async () => {} });
+  pi.registerCommand("weather", { description: "other weather", handler: async () => {} });
 }`,
 			);
 
@@ -1056,9 +1056,10 @@ export default function(pi: ExtensionAPI) {
 				agentDir,
 				extensionFactories: [
 					{
-						name: "mcp",
+						name: "weather",
 						replaceable: true,
-						factory: (pi) => pi.registerCommand("mcp", { description: "built-in mcp", handler: async () => {} }),
+						factory: (pi) =>
+							pi.registerCommand("weather", { description: "built-in weather", handler: async () => {} }),
 					},
 					{
 						name: "llama",
@@ -1072,7 +1073,7 @@ export default function(pi: ExtensionAPI) {
 
 			const extensionsResult = loader.getExtensions();
 			expect(extensionsResult.extensions.map((extension) => extension.path)).toEqual([
-				join(globalExtDir, "other-mcp.ts"),
+				join(globalExtDir, "other-weather.ts"),
 				"<inline:llama>",
 			]);
 			expect(extensionsResult.errors).toEqual([]);
@@ -1084,18 +1085,18 @@ export default function(pi: ExtensionAPI) {
 				SessionManager.inMemory(),
 				await createModelRegistry(AuthStorage.create(join(tempDir, "auth-replaceable.json"))),
 			);
-			expect(runner.getCommand("mcp")?.description).toBe("other mcp");
+			expect(runner.getCommand("weather")?.description).toBe("other weather");
 			expect(runner.getCommand("llama")?.description).toBe("built-in llama");
 		});
 
 		it("should skip built-in extensions disabled in settings", async () => {
-			writeFileSync(join(agentDir, "settings.json"), JSON.stringify({ extensions: ["-builtin:mcp"] }));
+			writeFileSync(join(agentDir, "settings.json"), JSON.stringify({ extensions: ["-builtin:weather"] }));
 			const loaded: string[] = [];
 			const loader = new DefaultResourceLoader({
 				cwd,
 				agentDir,
 				extensionFactories: [
-					{ name: "mcp", builtin: true, factory: () => void loaded.push("mcp") },
+					{ name: "weather", builtin: true, factory: () => void loaded.push("weather") },
 					{ name: "llama", builtin: true, factory: () => void loaded.push("llama") },
 				],
 			});
@@ -1116,13 +1117,13 @@ export default function(pi: ExtensionAPI) {
 			writeFileSync(join(userExtDir, "user.ts"), "export default function() {}");
 			mkdirSync(join(cwd, ".pi"), { recursive: true });
 			// A project override gives the built-in project scope, which must not move it ahead.
-			writeFileSync(join(cwd, ".pi", "settings.json"), JSON.stringify({ extensions: ["+builtin:mcp"] }));
+			writeFileSync(join(cwd, ".pi", "settings.json"), JSON.stringify({ extensions: ["+builtin:weather"] }));
 			const loader = new DefaultResourceLoader({
 				cwd,
 				agentDir,
-				extensionFactories: [{ name: "mcp", builtin: true, factory: () => {} }],
+				extensionFactories: [{ name: "weather", builtin: true, factory: () => {} }],
 			});
-			const expected = [join(userExtDir, "user.ts"), "builtin:mcp"];
+			const expected = [join(userExtDir, "user.ts"), "builtin:weather"];
 
 			await loader.reload({ resolveProjectTrust: async () => true });
 			expect(loader.getExtensions().extensions.map((extension) => extension.path)).toEqual(expected);
@@ -1136,34 +1137,34 @@ export default function(pi: ExtensionAPI) {
 				cwd,
 				agentDir,
 				noExtensions: true,
-				additionalExtensionPaths: ["builtin:mcp", "builtin:missing"],
+				additionalExtensionPaths: ["builtin:weather", "builtin:missing"],
 				extensionFactories: [
-					{ name: "mcp", builtin: true, factory: () => void loaded.push("mcp") },
+					{ name: "weather", builtin: true, factory: () => void loaded.push("weather") },
 					{ name: "llama", builtin: true, factory: () => void loaded.push("llama") },
 				],
 			});
 			await loader.reload();
 
-			expect(loader.getExtensions().extensions.map((extension) => extension.path)).toEqual(["builtin:mcp"]);
+			expect(loader.getExtensions().extensions.map((extension) => extension.path)).toEqual(["builtin:weather"]);
 			expect(loader.getExtensions().errors).toEqual([
 				{ path: "builtin:missing", error: "Unknown built-in extension: builtin:missing" },
 			]);
-			expect(loaded).toEqual(["mcp"]);
+			expect(loaded).toEqual(["weather"]);
 		});
 
 		it("should apply project built-in extension overrides after trust resolves", async () => {
-			writeFileSync(join(agentDir, "settings.json"), JSON.stringify({ extensions: ["-builtin:mcp"] }));
+			writeFileSync(join(agentDir, "settings.json"), JSON.stringify({ extensions: ["-builtin:weather"] }));
 			mkdirSync(join(cwd, ".pi"), { recursive: true });
 			writeFileSync(
 				join(cwd, ".pi", "settings.json"),
-				JSON.stringify({ extensions: ["+builtin:mcp", "-builtin:llama"] }),
+				JSON.stringify({ extensions: ["+builtin:weather", "-builtin:llama"] }),
 			);
 			const loaded: string[] = [];
 			const loader = new DefaultResourceLoader({
 				cwd,
 				agentDir,
 				extensionFactories: [
-					{ name: "mcp", builtin: true, factory: () => void loaded.push("mcp") },
+					{ name: "weather", builtin: true, factory: () => void loaded.push("weather") },
 					{ name: "plain", factory: () => void loaded.push("plain") },
 					{ name: "llama", builtin: true, factory: () => void loaded.push("llama") },
 				],
@@ -1177,10 +1178,10 @@ export default function(pi: ExtensionAPI) {
 			});
 
 			expect(loader.getExtensions().extensions.map((extension) => extension.path)).toEqual([
-				"builtin:mcp",
+				"builtin:weather",
 				"<inline:plain>",
 			]);
-			expect(loaded).toEqual(["plain", "mcp"]);
+			expect(loaded).toEqual(["plain", "weather"]);
 		});
 	});
 

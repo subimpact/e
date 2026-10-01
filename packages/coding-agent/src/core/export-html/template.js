@@ -930,7 +930,7 @@
             '</div>';
         };
 
-        // Calls this tool made to other tools (for example from a codemode script), recorded without results.
+        // Calls this tool made to other tools, recorded without results.
         const renderNestedCalls = () => {
           const nested = result?.nestedCalls;
           if (!nested || !Array.isArray(nested.calls) || nested.calls.length === 0) return '';

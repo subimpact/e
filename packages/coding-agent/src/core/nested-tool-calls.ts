@@ -1,6 +1,6 @@
 /**
- * Tool calls that a tool makes while it runs (`ctx.executeTool()`), for example from codemode
- * scripts. The agent loop does not know about them: the session runs each one through the agent's
+ * Tool calls that a tool makes while it runs, for example `ctx.executeTool()` with one extension
+ * nesting calls inside another. The agent loop does not know about them: the session runs each one through the agent's
  * tool pipeline (`runToolCall`) with its own hooks, emits `tool_execution_*` events with
  * `parentToolCallId`, and records the calls and their usage on the model-issued call's tool result
  * message.

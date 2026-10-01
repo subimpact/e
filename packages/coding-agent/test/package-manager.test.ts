@@ -6,6 +6,7 @@ import { PassThrough } from "node:stream";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DefaultPackageManager, type ProgressEvent, type ResolvedResource } from "../src/core/package-manager.ts";
 import { SettingsManager } from "../src/core/settings-manager.ts";
+import { builtInExtensions } from "../src/extensions/index.ts";
 
 function normalizeForMatch(value: string): string {
 	return value.replace(/\\/g, "/");
@@ -125,31 +126,33 @@ describe("DefaultPackageManager", () => {
 		});
 
 		it("should resolve built-in extensions with user exclusions and project overrides", async () => {
+			// e fork: `llama.cpp` is the only built-in extension; it is default-enabled. The removed
+			// add-on built-ins (M-server, C-engine, T-search) do not exist in this package at all.
 			const pm = new DefaultPackageManager({
 				cwd: tempDir,
 				agentDir,
 				settingsManager,
-				builtinExtensions: ["mcp", "llama.cpp"],
+				builtinExtensions: ["llama.cpp"],
 			});
 			const builtins = async () =>
 				(await pm.resolve()).extensions.map((r) => [r.path, r.enabled, r.metadata.source, r.metadata.scope]);
 
-			expect(await builtins()).toEqual([
-				["builtin:mcp", true, "builtin", "user"],
-				["builtin:llama.cpp", true, "builtin", "user"],
-			]);
+			expect(await builtins()).toEqual([["builtin:llama.cpp", true, "builtin", "user"]]);
 
-			settingsManager.setExtensionPaths(["-builtin:mcp"]);
-			settingsManager.setProjectExtensionPaths(["+builtin:mcp", "-builtin:llama.cpp"]);
-			expect(await builtins()).toEqual([
-				["builtin:mcp", true, "builtin", "project"],
-				["builtin:llama.cpp", false, "builtin", "project"],
-			]);
+			// Global force-exclude wins over default-enabled; project entries override global ones.
+			settingsManager.setExtensionPaths(["-builtin:llama.cpp"]);
+			settingsManager.setProjectExtensionPaths(["+builtin:llama.cpp"]);
+			expect(await builtins()).toEqual([["builtin:llama.cpp", true, "builtin", "project"]]);
 
 			settingsManager.setProjectExtensionPaths([]);
-			expect(await builtins()).toEqual([
-				["builtin:mcp", false, "builtin", "user"],
-				["builtin:llama.cpp", true, "builtin", "user"],
+			expect(await builtins()).toEqual([["builtin:llama.cpp", false, "builtin", "user"]]);
+		});
+
+		it("should not include the removed add-on built-ins in the built-in list", () => {
+			// e fork: the three add-on built-ins were removed entirely, not disabled (the minimalist
+			// promise in the README fork story). Nothing else is named here to avoid re-introducing them.
+			expect(builtInExtensions.map((extension) => ("name" in extension ? extension.name : ""))).toEqual([
+				"llama.cpp",
 			]);
 		});
 

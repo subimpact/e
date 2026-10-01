@@ -1,9 +1,12 @@
+import { readAppEnv } from "../config.ts";
+
 /**
  * Central timing instrumentation for startup profiling.
- * Enable with PI_TIMING=1 environment variable.
+ * Enable with E_TIMING=1 (legacy PI_TIMING) environment variable.
  */
 
-const ENABLED = process.env.PI_TIMING === "1";
+const ENABLED = readAppEnv("TIMING") === "1";
+
 interface TimingNamespace {
 	timings: Array<{ label: string; ms: number }>;
 	lastTime: number;

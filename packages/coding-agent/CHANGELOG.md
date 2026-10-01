@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Breaking Changes
+
+- e is a pi-compatible rebrand (`@subimpact/e`, binary `e`): the `mcp`, `codemode`, and `tool-search` built-in extensions are disabled by default; opt in with `+builtin:<name>` entries in the `extensions` setting (user or project scope), with `-e builtin:<name>` on the command line, or in the `e config` Built-in section. `llama.cpp` stays default-enabled. All add-on source, APIs, exports, and dependencies remain present, and third-party pi extensions/packages keep working unmodified.
+- User config moved to `~/.e/agent` (legacy override `PI_CODING_AGENT_DIR` stays honored; set `E_CODING_AGENT_DIR` to reuse an existing pi setup). The project-level `.pi/` config dir is unchanged and stays shared with pi.
+- User-facing environment variables prefer the `E_*` prefix; upstream `PI_*` names remain working aliases (for example `E_OFFLINE` / `PI_OFFLINE`).
+- The startup version check and install report to pi.dev, and `update self` are disabled; update e manually with `npm i -g @subimpact/e`.
+
 ### Added
 
 - Added an `oauth.authServerMetadataUrl` setting for MCP servers that advertise a wrong OAuth authorization server or none. Pi uses the configured metadata document instead of discovery ([#10172](https://github.com/earendil-works/pi/issues/10172)).

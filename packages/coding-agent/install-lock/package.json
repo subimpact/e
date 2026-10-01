@@ -4,7 +4,7 @@
 	"private": true,
 	"description": "Lockfile root used by the Pi installer and updater.",
 	"dependencies": {
-		"@earendil-works/pi-coding-agent": "0.99.2"
+		"@subimpact/e": "0.99.2"
 	},
 	"overrides": {
 		"protobufjs": "7.6.6"

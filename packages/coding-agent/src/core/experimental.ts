@@ -1,3 +1,6 @@
+import { readAppEnv } from "../config.ts";
+
+// e fork: opt in with E_EXPERIMENTAL=1 (legacy PI_EXPERIMENTAL).
 export function areExperimentalFeaturesEnabled(): boolean {
-	return process.env.PI_EXPERIMENTAL === "1";
+	return readAppEnv("EXPERIMENTAL") === "1";
 }

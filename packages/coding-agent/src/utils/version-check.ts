@@ -1,4 +1,5 @@
 import { compare, valid } from "semver";
+import { readAppEnv } from "../config.ts";
 import { fetchWithRetry } from "./management-http.ts";
 import { getPiUserAgent } from "./pi-user-agent.ts";
 
@@ -52,7 +53,7 @@ export async function getLatestPiRelease(
 	currentVersion: string,
 	options: { timeoutMs?: number; retry?: boolean } = {},
 ): Promise<LatestPiRelease | undefined> {
-	if (process.env.PI_OFFLINE) return undefined;
+	if (readAppEnv("OFFLINE")) return undefined;
 
 	const response = await fetchWithRetry(
 		LATEST_VERSION_URL,
@@ -94,16 +95,9 @@ export async function getLatestPiVersion(
 	return (await getLatestPiRelease(currentVersion, options))?.version;
 }
 
-export async function checkForNewPiVersion(currentVersion: string): Promise<LatestPiRelease | undefined> {
-	if (process.env.PI_SKIP_VERSION_CHECK) return undefined;
-
-	try {
-		const latestRelease = await getLatestPiRelease(currentVersion);
-		if (latestRelease && isNewerPackageVersion(latestRelease.version, currentVersion)) {
-			return latestRelease;
-		}
-		return undefined;
-	} catch {
-		return undefined;
-	}
+export async function checkForNewPiVersion(_currentVersion: string): Promise<LatestPiRelease | undefined> {
+	// e fork: the startup version check is disabled. The upstream pi.dev release channel would serve
+	// the upstream package name, so a hit here could suggest replacing `e` with `pi`, and it would
+	// phone pi.dev with e's version data. `e update self` is disabled for the same reason.
+	return undefined;
 }

@@ -37,7 +37,7 @@ import type { Readable } from "node:stream";
 import ignore from "ignore";
 import { minimatch } from "minimatch";
 import { gt, maxSatisfying, rcompare, satisfies, valid, validRange } from "semver";
-import { CONFIG_DIR_NAME } from "../config.ts";
+import { CONFIG_DIR_NAME, readAppEnv } from "../config.ts";
 import { spawnProcess, spawnProcessSync } from "../utils/child-process.ts";
 import { type GitSource, parseGitUrl } from "../utils/git.ts";
 import { canonicalizePath, isLocalPath, markPathIgnoredByCloudSync, resolvePath } from "../utils/paths.ts";
@@ -52,7 +52,7 @@ const UPDATE_CHECK_CONCURRENCY = 4;
 const GIT_UPDATE_CONCURRENCY = 4;
 
 function isOfflineModeEnabled(): boolean {
-	const value = process.env.PI_OFFLINE;
+	const value = readAppEnv("OFFLINE");
 	if (!value) return false;
 	return value === "1" || value.toLowerCase() === "true" || value.toLowerCase() === "yes";
 }
@@ -715,13 +715,13 @@ function getOverridePatterns(entries: string[]): string[] {
 	return entries.filter((pattern) => pattern.startsWith("!") || pattern.startsWith("+") || pattern.startsWith("-"));
 }
 
-function isEnabledByOverrides(filePath: string, patterns: string[], baseDir: string): boolean {
+function isEnabledByOverrides(filePath: string, patterns: string[], baseDir: string, defaultEnabled = true): boolean {
 	const overrides = getOverridePatterns(patterns);
 	const excludes = overrides.filter((pattern) => pattern.startsWith("!")).map((pattern) => pattern.slice(1));
 	const forceIncludes = overrides.filter((pattern) => pattern.startsWith("+")).map((pattern) => pattern.slice(1));
 	const forceExcludes = overrides.filter((pattern) => pattern.startsWith("-")).map((pattern) => pattern.slice(1));
 
-	let enabled = true;
+	let enabled = defaultEnabled;
 	if (excludes.length > 0 && matchesAnyPattern(filePath, excludes, baseDir)) {
 		enabled = false;
 	}
@@ -968,8 +968,8 @@ export class DefaultPackageManager implements PackageManager {
 
 		this.addAutoDiscoveredResources(accumulator, globalSettings, projectSettings, globalBaseDir, projectBaseDir);
 
-		// Built-in extensions are enabled unless the user `extensions` setting excludes them, for example
-		// with `-builtin:mcp`. A matching `+`, `-`, or `!` entry in the project setting overrides that.
+		// Built-in providers are enabled unless the user `extensions` setting excludes them, for example
+		// with `-builtin:llama.cpp`. A matching `+`, `-`, or `!` entry in the project setting overrides that.
 		for (const name of this.builtinExtensions) {
 			const path = `${BUILTIN_PATH_PREFIX}${name}`;
 			const projectEnabled = applyAutoloadDisabledPatterns(

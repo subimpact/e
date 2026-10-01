@@ -377,8 +377,6 @@ export class ExtensionRunner {
 		normalizeBuildSystemPromptOptions({ cwd: this.cwd });
 	private executeToolFn: ExtensionContextActions["executeTool"];
 	private getCallableToolsFn: () => readonly AgentTool[] = () => [];
-	/** Registered MCP servers already reported as unhandled. */
-	private readonly reportedMcpServers = new Set<string>();
 	private newSessionHandler: NewSessionHandler = async () => ({ cancelled: false });
 	private forkHandler: ForkHandler = async () => ({ cancelled: false });
 	private navigateTreeHandler: NavigateTreeHandler = async () => ({ cancelled: false });
@@ -451,13 +449,6 @@ export class ExtensionRunner {
 			contextActions.getSystemPromptOptions ?? (() => normalizeBuildSystemPromptOptions({ cwd: this.cwd }));
 		this.executeToolFn = contextActions.executeTool;
 		this.getCallableToolsFn = contextActions.getCallableTools ?? (() => []);
-
-		// Servers registered from now on reach the extension that connects them right away. Servers
-		// registered during loading are read on session_start.
-		this.runtime.mcpServers.setChangeListener(() => {
-			void this.emit({ type: "mcp_servers_change", servers: this.runtime.mcpServers.list() });
-			this.reportUnhandledMcpServers();
-		});
 
 		// Flush provider registrations queued during extension loading
 		for (const { name, config, extensionPath } of this.runtime.pendingProviderRegistrations) {
@@ -741,23 +732,6 @@ export class ExtensionRunner {
 	emitError(error: ExtensionError): void {
 		for (const listener of this.errorListeners) {
 			listener(error);
-		}
-	}
-
-	/**
-	 * Report registered MCP servers when no extension handles `mcp_servers_change`, which means
-	 * nothing connects them (for example when another MCP extension replaced the built-in one).
-	 */
-	reportUnhandledMcpServers(): void {
-		if (this.hasHandlers("mcp_servers_change")) return;
-		for (const server of this.runtime.mcpServers.list()) {
-			if (this.reportedMcpServers.has(server.name)) continue;
-			this.reportedMcpServers.add(server.name);
-			this.emitError({
-				extensionPath: server.extensionPath,
-				event: "register_mcp_server",
-				error: `MCP server "${server.name}" is registered, but no loaded extension connects MCP servers; another extension may have replaced the built-in MCP support`,
-			});
 		}
 	}
 
