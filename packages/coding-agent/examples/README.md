@@ -20,7 +20,7 @@ Programmatic usage via `createAgentSession()`. Shows how to customize models, pr
 ### [extensions/](extensions/)
 Example extensions demonstrating:
 - Lifecycle event handlers (tool interception, safety gates, context modifications)
-- Custom tools (todo lists, questions, subagents, output truncation)
+- Custom tools (todo lists, questions, background tasks, output truncation)
 - Commands and keyboard shortcuts
 - Custom UI (footers, headers, editors, overlays)
 - Git integration (checkpoints, auto-commit)

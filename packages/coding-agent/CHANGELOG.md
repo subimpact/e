@@ -2,12 +2,13 @@
 
 ## [Unreleased]
 
-## [0.99.3] - 2026-10-01
+## [0.99.4] - 2026-10-01
 
 ### Changed
 
-- The header logo is now the e glyph (Euler's number) and the startup hint text says e, not Pi. The `Pi can explain its own features` onboarding line, the share-title, and the logo easter egg follow the e identity.
-- Startup no longer shows a changelog popup for the 0.99.2 carve release: the popup only appears when a NEW version carries entries the user has not seen. (The 0.99.2 package shipped a stale pi changelog, so first launch showed a What's New block titled by the old brand; that stale block is gone.)
+- Sub-agents are carved out. The upstream sub-agent machinery (src/experimental/durable: the subagent tool, the /agents conversation switcher, the durable harness runtime) and the sub-agent example extension are deleted from the e tree. Sub-agents were one of the founding refusals; e keeps the refusal in code, not in configuration.
+- The header logo is the e glyph (Euler's number) and the startup hint text says e, not Pi. The onboarding line, the share title, and the logo easter egg follow the e identity.
+- Startup no longer shows a changelog popup for the 0.99.2 carve release: the popup only appears when a new version carries entries the user has not seen. (The 0.99.2 package shipped a stale pi changelog, so first launch showed a What's New block titled by the old brand; that stale block is gone.)
 
 ## [0.99.2] - 2026-09-30
 

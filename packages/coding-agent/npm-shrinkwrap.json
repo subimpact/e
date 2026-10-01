@@ -1,12 +1,12 @@
 {
 	"name": "@subimpact/e",
-	"version": "0.99.2",
+	"version": "0.99.4",
 	"lockfileVersion": 3,
 	"requires": true,
 	"packages": {
 		"": {
 			"name": "@subimpact/e",
-			"version": "0.99.2",
+			"version": "0.99.4",
 			"license": "MIT",
 			"dependencies": {
 				"@earendil-works/chord": "^0.99.2",

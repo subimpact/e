@@ -9,9 +9,10 @@ A minimal terminal coding harness. **e** is a fork of
 affiliated with the upstream project**.
 
 e keeps the original pi promise, as code: one model, one loop, four tools
-(read, write, edit, bash). **MCP, codemode, and tool-search are removed, not
-disabled.** There is no setting that brings them back, and no update ever will.
-The features on the box are the ones you get: all of them, and nothing else.
+(read, write, edit, bash). **MCP, codemode, tool-search, and sub-agents are
+removed, not disabled.** There is no setting that brings them back, and no
+update ever will. The features on the box are the ones you get: all of them,
+and nothing else.
 
 ```bash
 npm i -g @subimpact/e
@@ -35,9 +36,11 @@ dissent; forking is the other.
 - **The moment the promise broke**: pi
   [0.99.0](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/CHANGELOG.md)
   shipped MCP, codemode, and tool-search as built-in extensions on 2026-09-29.
-  The community reaction (r/PiCodingAgent: "Pi is becoming bloated", "Removed
-  mcp extensions and cannot be happier") is the same argument from many
-  directions: the refusals were the product.
+  On top of that, the upstream tree now carries sub-agent plumbing
+  (`src/experimental/durable/subagent.ts`, a `/agents` command, and a
+  sub-agent example extension). The community reaction (r/PiCodingAgent: "Pi
+  is becoming bloated", "Removed mcp extensions and cannot be happier") is the
+  same argument from many directions: the refusals were the product.
 - **e's answer**: [the e promise](https://e.subimpact.net/promise/) (nine
   binding commitments, checkable in source),
   [the story](https://e.subimpact.net/story/) (why the fork is the argument),
@@ -52,6 +55,12 @@ install and run unmodified.
 Packages that require the 0.99 built-in MCP, codemode, or tool-search APIs do
 not work in e. That is not a bug; it is the point.
 
+Sub-agents do not exist in e either: the upstream sub-agent machinery
+(`src/experimental/durable/subagent.ts` and the sub-agent example extension)
+is carved out of this tree (0.99.4), and the `subagents` directory that
+classical pi packages could ship remains inert unless a package registers
+tools itself.
+
 Classifier models (such as TypeSafe's Jev) remain in the provider catalogs as
 inert model entries. Nothing in e loads or invokes a classifier; the only
 execution path it ever had was codemode, which does not exist in e.
@@ -62,7 +71,7 @@ execution path it ever had was codemode, which does not exist in e.
 |---|---|---|
 | Core tools | read, write, edit, bash | read, write, edit, bash (same) |
 | `mcp`, `codemode`, `tool-search` | **Removed** | Built-in extensions |
-| Sub-agents | None | None |
+| Sub-agents | **Removed** (carved out) | Experimental tree (`durable/subagent.ts`), example extension |
 | Classical pi packages | Work unmodified | Work |
 | Packages needing 0.99 built-in APIs | Do not (by design) | Do |
 | `llama.cpp` provider | Included | Included |
