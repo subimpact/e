@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [0.99.5] - 2026-10-02
+
+### Breaking Changes
+
+- The monorepo itself is carved: the `packages/codemode`, `packages/mcp`, and `packages/durable` (sub-agent runtime) packages are deleted from the repository, together with their build scripts, CI conformance and smoke jobs, path aliases, and lockfile entries. The addon code no longer exists anywhere in the tree: not only out of the shipped harness, out of the repository entirely. Docs describing the removed systems are rewritten or removed; e's docs claim only what exists.
+
+
 ## [0.99.4] - 2026-10-01
 
 ### Changed
