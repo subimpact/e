@@ -26,7 +26,7 @@ describe("#8537 custom messages injected during tool execution", () => {
 			description: "Wait for a background task",
 			parameters: Type.Object({}),
 			execute: async () => {
-				// A background task (e.g. a subagent reply) notifies the session while the
+				// A background task (e.g. a remote worker reply) notifies the session while the
 				// tool is still running.
 				await notify?.();
 				return { content: [{ type: "text", text: "tool done" }], details: {} };
@@ -37,7 +37,7 @@ describe("#8537 custom messages injected during tool execution", () => {
 		harnesses.push(harness);
 		notify = () =>
 			harness.session.sendCustomMessage(
-				{ customType: "subagent-reply", content: "subagent replied", display: true },
+				{ customType: "worker-reply", content: "worker replied", display: true },
 				{ triggerTurn: false },
 			);
 
@@ -75,7 +75,7 @@ describe("#8537 custom messages injected during tool execution", () => {
 		harnesses.push(harness);
 		notify = () =>
 			harness.session.sendCustomMessage(
-				{ customType: "subagent-reply", content: "subagent replied", display: true },
+				{ customType: "worker-reply", content: "worker replied", display: true },
 				{ triggerTurn: false },
 			);
 
@@ -117,7 +117,7 @@ describe("#8537 custom messages injected during tool execution", () => {
 		harnesses.push(harness);
 		notify = () =>
 			harness.session.sendCustomMessage(
-				{ customType: "subagent-reply", content: "subagent replied", display: true },
+				{ customType: "worker-reply", content: "worker replied", display: true },
 				{ triggerTurn: false },
 			);
 
