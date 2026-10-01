@@ -80,8 +80,8 @@ const FLY_DURATION = 1.3;
 /** Grid position of a logo block: column and row in the 4x4 logo, and layer (-1, 0, 1) in depth. */
 type Cell3 = readonly [number, number, number];
 
-// The logo's pixels on a 4x4 grid. Each pixel is a block that the puzzle slides around.
-const LOGO_PIXELS = ["ccc.", "b.c.", "bb.y", "b..y"];
+// The logo's pixels on a 4x4 grid: an e (Euler's number). Each pixel is a block that the puzzle slides around.
+const LOGO_PIXELS = ["c..c", "cccc", "bbbc", "b..b"];
 const BLOCKS: Array<{ home: Cell3; color: Rgb }> = LOGO_PIXELS.flatMap((line, row) =>
 	[...line].flatMap((pixel, column) => {
 		const color = pixel === "c" ? CORAL : pixel === "b" ? BLUE : pixel === "y" ? YELLOW : undefined;

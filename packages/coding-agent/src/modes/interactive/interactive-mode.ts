@@ -1027,7 +1027,7 @@ export class InteractiveMode {
 			const compactOnboarding = () =>
 				theme.fg("dim", `Press ${keyText("app.tools.expand")} to show full startup help and loaded resources.`);
 			const onboarding = () =>
-				theme.fg("dim", `Pi can explain its own features and look up its docs. Ask it how to use or extend Pi.`);
+				theme.fg("dim", `e can explain its own features and look up its docs. Ask it how to use or extend e.`);
 			const header = new BuiltInHeader(
 				() => `${withLogo(compactInstructions())}\n${compactOnboarding()}\n\n${onboarding()}`,
 				() => `${withLogo(expandedInstructions())}\n\n${onboarding()}`,
