@@ -2,30 +2,12 @@
 
 ## [Unreleased]
 
-### Breaking Changes
-
-- e is a pi-compatible rebrand (`@subimpact/e`, binary `e`): the `mcp`, `codemode`, and `tool-search` built-in extensions are disabled by default; opt in with `+builtin:<name>` entries in the `extensions` setting (user or project scope), with `-e builtin:<name>` on the command line, or in the `e config` Built-in section. `llama.cpp` stays default-enabled. All add-on source, APIs, exports, and dependencies remain present, and third-party pi extensions/packages keep working unmodified.
-- User config moved to `~/.e/agent` (legacy override `PI_CODING_AGENT_DIR` stays honored; set `E_CODING_AGENT_DIR` to reuse an existing pi setup). The project-level `.pi/` config dir is unchanged and stays shared with pi.
-- User-facing environment variables prefer the `E_*` prefix; upstream `PI_*` names remain working aliases (for example `E_OFFLINE` / `PI_OFFLINE`).
-- The startup version check and install report to pi.dev, and `update self` are disabled; update e manually with `npm i -g @subimpact/e`.
-
-### Added
-
-- Added an `oauth.authServerMetadataUrl` setting for MCP servers that advertise a wrong OAuth authorization server or none. Pi uses the configured metadata document instead of discovery ([#10172](https://github.com/earendil-works/pi/issues/10172)).
+## [0.99.3] - 2026-10-01
 
 ### Changed
 
-- MCP OAuth credentials are now stored per server name and URL, so MCP servers with the same URL can sign in with different accounts. Credentials stored by URL alone move to the first server that uses them ([#10252](https://github.com/earendil-works/pi/issues/10252)).
-
-### Fixed
-
-- Fixed MCP OAuth sign-in accepting an authorization response whose `iss` parameter names another authorization server; the code is now rejected before it is exchanged (RFC 9207).
-- Fixed MCP OAuth sign-in failing with `Invalid scope` when the token response contains `"scope": ""`, and similar failures for other empty or `null` optional OAuth fields ([#10266](https://github.com/earendil-works/pi/issues/10266)).
-- Fixed the sign-in URL printed by `/mcp login` not being clickable when it wraps ([#10186](https://github.com/earendil-works/pi/issues/10186)).
-- Fixed `--provider` without `--model` being silently ignored and running the default model from another provider; it now fails with an error ([#10236](https://github.com/earendil-works/pi/issues/10236)).
-- Fixed MCP servers that ask for more scope (`insufficient_scope`) requesting sign-in over and over. The new sign-in requested only the missing scopes, so the new token lost access the previous one had; it now keeps the granted scopes.
-- Fixed user messages in the transcript keeping two full-width copies of every rendered line; they keep one, with identical output.
-- Fixed deferred MCP tools that `tool_search` loaded being dropped on resume and `/reload` even when their server reconnected before the next prompt, because the session restored its tools before the MCP servers reconnected.
+- The header logo is now the e glyph (Euler's number) and the startup hint text says e, not Pi. The `Pi can explain its own features` onboarding line, the share-title, and the logo easter egg follow the e identity.
+- Startup no longer shows a changelog popup for the 0.99.2 carve release: the popup only appears when a NEW version carries entries the user has not seen. (The 0.99.2 package shipped a stale pi changelog, so first launch showed a What's New block titled by the old brand; that stale block is gone.)
 
 ## [0.99.2] - 2026-09-30
 

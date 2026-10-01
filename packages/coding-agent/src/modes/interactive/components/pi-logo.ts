@@ -1,26 +1,27 @@
-import { backgroundAnsi, foregroundAnsi, rgbColor } from "@earendil-works/pi-tui";
+import { foregroundAnsi, rgbColor } from "@earendil-works/pi-tui";
 import { theme } from "../theme/theme.ts";
 
 const CORAL = rgbColor(228, 138, 122);
 const BLUE = rgbColor(79, 142, 179);
-const YELLOW = rgbColor(234, 182, 93);
 const RESET = "\x1b[0m";
 
 /**
- * The pi logo: 4 cells wide and 2 lines tall. Each cell shows two square pixels with half blocks:
+ * The e logo (Euler's number): 4 cells wide and 2 lines tall. Each cell shows two square pixels with
+ * half blocks:
  *
- *   coral coral coral .
- *   blue  .     coral .
- *   blue  blue  .     yellow
- *   blue  .     .     yellow
+ *   coral .      .    coral
+ *   blue  coral  blue .
  *
- * The brand colors stay fixed across themes; they follow the terminal's color mode.
+ * The glyph reads as a lowercase e: the top stroke opens, the body closes the loop the same way the
+ * constant turns up everywhere in calculus. Brand colors stay fixed across themes; they follow the
+ * terminal's color mode.
  */
 export function piLogoLines(): [string, string] {
 	const mode = theme.getColorMode();
 	const fg = (color: typeof CORAL) => foregroundAnsi(color, mode);
-	// The fourth cell of the top line is empty, so it is padded to the same width as the bottom line.
-	const top = `${fg(CORAL)}${backgroundAnsi(BLUE, mode)}▀${RESET}${fg(CORAL)}▀█${RESET} `;
-	const bottom = `${fg(BLUE)}█▀${RESET} ${fg(YELLOW)}█${RESET}`;
+	// Four cells per line, two half-block rows per cell. Top line: the open e-curve (coral); bottom
+	// line: the closed body (blue) with the coral bar that gives the glyph its eye.
+	const top = `${fg(CORAL)}▀ ${fg(CORAL)}▀▀${RESET} `;
+	const bottom = `${fg(BLUE)}█▀${fg(CORAL)}▀${fg(BLUE)}█ ${RESET}`;
 	return [top, bottom];
 }
