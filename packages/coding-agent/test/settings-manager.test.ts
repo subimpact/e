@@ -648,11 +648,11 @@ describe("SettingsManager", () => {
 		});
 
 		it("applies +name and -name to the default selection", () => {
-			expect(SettingsManager.inMemory({ defaultTools: ["+codemode", "-write"] }).getDefaultTools()).toEqual([
+			expect(SettingsManager.inMemory({ defaultTools: ["+custom-tool", "-write"] }).getDefaultTools()).toEqual([
 				"read",
 				"bash",
 				"edit",
-				"codemode",
+				"custom-tool",
 			]);
 			expect(SettingsManager.inMemory({ defaultTools: ["read", "+grep", "+read"] }).getDefaultTools()).toEqual([
 				"read",
@@ -663,29 +663,29 @@ describe("SettingsManager", () => {
 		it("layers project modifiers on top of the global selection", () => {
 			writeFileSync(
 				join(agentDir, "settings.json"),
-				JSON.stringify({ defaultTools: ["read", "bash", "+codemode"] }),
+				JSON.stringify({ defaultTools: ["read", "bash", "+custom-tool"] }),
 			);
 			writeFileSync(
 				join(projectDir, ".pi", "settings.json"),
-				JSON.stringify({ defaultTools: ["-codemode", "+tool_search"] }),
+				JSON.stringify({ defaultTools: ["-custom-tool", "+grep"] }),
 			);
 
 			const manager = SettingsManager.create(projectDir, agentDir);
-			expect(manager.getDefaultTools()).toEqual(["read", "bash", "tool_search"]);
+			expect(manager.getDefaultTools()).toEqual(["read", "bash", "grep"]);
 
-			manager.applyOverrides({ defaultTools: ["+codemode"] });
-			expect(manager.getDefaultTools()).toEqual(["read", "bash", "tool_search", "codemode"]);
+			manager.applyOverrides({ defaultTools: ["+custom-tool"] });
+			expect(manager.getDefaultTools()).toEqual(["read", "bash", "grep", "custom-tool"]);
 		});
 
 		it("applies project modifiers to the built-in defaults without a global setting", () => {
-			writeFileSync(join(projectDir, ".pi", "settings.json"), JSON.stringify({ defaultTools: ["+codemode"] }));
+			writeFileSync(join(projectDir, ".pi", "settings.json"), JSON.stringify({ defaultTools: ["+custom-tool"] }));
 
 			expect(SettingsManager.create(projectDir, agentDir).getDefaultTools()).toEqual([
 				"read",
 				"bash",
 				"edit",
 				"write",
-				"codemode",
+				"custom-tool",
 			]);
 		});
 	});

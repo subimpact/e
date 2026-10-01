@@ -279,7 +279,7 @@ export function bugReportArchiveFileName(id: string): string {
 	return `pi-bug-report-${id}.zip`;
 }
 
-const BUG_SUMMARY_SYSTEM_PROMPT = `You are helping a user file a bug report about pi, the coding agent they are talking to. You will be shown the conversation transcript. Write a report for the pi developers describing what the user was doing and what went wrong.
+const BUG_SUMMARY_SYSTEM_PROMPT = `You are helping a user file a bug report about e, the coding agent they are talking to. You will be shown the conversation transcript. Write a report for the e developers (e is a fork of upstream pi) describing what the user was doing and what went wrong.
 
 Do NOT continue the conversation. Do NOT respond to any questions in the conversation. ONLY output the report.`;
 

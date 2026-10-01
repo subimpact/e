@@ -20,7 +20,7 @@ import { wrapToolDefinition } from "./tool-definition-wrapper.ts";
 import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, formatSize, type TruncationResult } from "./truncate.ts";
 
 const MAX_TIMEOUT_MS = 2_147_483_647;
-/** Output limit of `structuredContent.output`, which programmatic callers such as codemode scripts receive. */
+/** Output limit of `structuredContent.output`, which programmatic callers receive. */
 const STRUCTURED_OUTPUT_MAX_BYTES = 1024 * 1024;
 const MAX_TIMEOUT_SECONDS = MAX_TIMEOUT_MS / 1000;
 
@@ -50,7 +50,8 @@ export const bashToolSystemPromptContribution = {
 export type BashToolInput = Static<typeof bashSchema>;
 
 /**
- * Result for programmatic callers such as codemode scripts. A non-zero exit code is an error result for the model, but scripts still resolve to this value.
+ * Result for programmatic callers. A non-zero exit code is an error result for the model, but
+ * programmatic callers still resolve to this value.
  * `output` is not limited like the model-facing output: callers decide how much of it reaches the model.
  */
 const bashOutputSchema = Type.Object({
@@ -194,6 +195,8 @@ function resolveSpawnContext(
 	ctx: ExtensionContext | undefined,
 ): BashSpawnContext {
 	const env = { ...getShellEnv() };
+	// Session context is published under the legacy `PI_` names (scripts read them) plus the
+	// `E_` aliases e prefers, so both keep working.
 	delete env.PI_SESSION_ID;
 	delete env.PI_SESSION_FILE;
 	delete env.PI_PROVIDER;
@@ -209,6 +212,12 @@ function resolveSpawnContext(
 			env.PI_MODEL = model.id;
 		}
 		if (ctx.thinkingLevel) env.PI_REASONING_LEVEL = ctx.thinkingLevel;
+		// Prefer the e-facing aliases alongside the legacy names.
+		env.E_SESSION_ID = env.PI_SESSION_ID;
+		if (env.PI_SESSION_FILE) env.E_SESSION_FILE = env.PI_SESSION_FILE;
+		if (env.PI_PROVIDER) env.E_PROVIDER = env.PI_PROVIDER;
+		if (env.PI_MODEL) env.E_MODEL = env.PI_MODEL;
+		if (env.PI_REASONING_LEVEL) env.E_REASONING_LEVEL = env.PI_REASONING_LEVEL;
 	}
 	const baseContext: BashSpawnContext = { command, cwd, env };
 	return spawnHook ? spawnHook(baseContext) : baseContext;

@@ -1,116 +1,112 @@
 <p align="center">
-  <a href="https://pi.dev">
-    <img alt="pi logo" src="https://pi.dev/logo-auto.svg" width="128">
-  </a>
-</p>
-<p align="center">
-  <a href="https://discord.com/invite/3cU7Bz4UPx"><img alt="Discord" src="https://img.shields.io/badge/discord-community-5865F2?style=flat-square&logo=discord&logoColor=white" /></a>
-  <a href="https://www.npmjs.com/package/@earendil-works/pi-coding-agent"><img alt="npm" src="https://img.shields.io/npm/v/@earendil-works/pi-coding-agent?style=flat-square" /></a>
+  <img alt="e" src="packages/coding-agent/docs/images/exy.png" width="128">
 </p>
 
-> New issues and PRs from new contributors are auto-closed by default. Maintainers review auto-closed issues daily. See [CONTRIBUTING.md](CONTRIBUTING.md).
+# e (Euler's number), a minimal terminal coding harness
 
-# Pi Agent Harness
+A minimal terminal coding harness. **e** is a fork of
+[earendil-works/pi](https://github.com/earendil-works/pi) (MIT); it is **not
+affiliated with the upstream project**.
 
-This is the home of the Pi agent harness project including our self extensible coding agent.
+e keeps the original pi promise, as code: one model, one loop, four tools
+(read, write, edit, bash). **MCP, codemode, and tool-search are removed, not
+disabled.** There is no setting that brings them back, and no update ever will.
+The features on the box are the ones you get: all of them, and nothing else.
 
-* **[@earendil-works/pi-coding-agent](packages/coding-agent)**: Interactive coding agent CLI
-* **[@earendil-works/pi-agent-core](packages/agent)**: Agent runtime with tool calling and state management
-* **[@earendil-works/pi-ai](packages/ai)**: Unified multi-provider LLM API (OpenAI, Anthropic, Google, …)
+```bash
+npm i -g @subimpact/e
+```
 
-To learn more about Pi:
+## The pi 0.99.0 story, briefly
 
-* [Visit pi.dev](https://pi.dev), the project website with demos
-* [Read the documentation](https://pi.dev/docs/latest), but you can also ask the agent to explain itself
+pi earned its reputation on a list of refusals: no MCP, no sub-agents, no plan
+mode. Version 0.99.0 (2026-09-29) shipped the refusals anyway, as built-in
+extensions. e is the fork that keeps the founding promise: the addon systems are
+carved out of the codebase entirely. Arguing on an issue tracker is one way to
+dissent; forking is the other.
 
-## All Packages
+## Why e exists: the receipts
 
-| Package | Description |
-|---------|-------------|
-| **[@earendil-works/chord](packages/chord)** | Standalone application-composition runtime for services, replicated state, RPC, and plugins |
-| **[@earendil-works/pi-telemetry](packages/telemetry)** | Vendor-neutral telemetry contracts, reference adapter, conformance tests, and typed schemas |
-| **[@earendil-works/pi-ai](packages/ai)** | Unified multi-provider LLM API (OpenAI, Anthropic, Google, etc.) |
-| **[@earendil-works/pi-durable](packages/durable)** | Durable conversation, task, and document runtime |
-| **[@earendil-works/pi-agent-core](packages/agent)** | Agent runtime with tool calling and state management |
-| **[@earendil-works/pi-coding-agent](packages/coding-agent)** | Interactive coding agent CLI |
-| **[@earendil-works/pi-tui](packages/tui)** | Terminal UI library with differential rendering |
+- **The original promise, in the creator's own words**: the pi blog post
+  ["What I learned building an opinionated and minimal coding agent"](https://mariozechner.at/posts/2025-11-30-pi-coding-agent/)
+  states that pi *"does not and will not support MCP"* and ships without
+  sub-agents, plan mode, or permission popups. That post is the founding
+  document e holds itself to.
+- **The moment the promise broke**: pi
+  [0.99.0](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/CHANGELOG.md)
+  shipped MCP, codemode, and tool-search as built-in extensions on 2026-09-29.
+  The community reaction (r/PiCodingAgent: "Pi is becoming bloated", "Removed
+  mcp extensions and cannot be happier") is the same argument from many
+  directions: the refusals were the product.
+- **e's answer**: [the e promise](https://e.subimpact.net/promise/) (nine
+  binding commitments, checkable in source),
+  [the story](https://e.subimpact.net/story/) (why the fork is the argument),
+  and [pi vs e](https://e.subimpact.net/pi-vs-e/) (the one-table comparison).
 
-For Slack/chat automation and workflows see [earendil-works/pi-chat](https://github.com/earendil-works/pi-chat).
+## What compatibility means
 
-## Permissions & Containerization
+e keeps compatibility with the **classical pi package ecosystem**: packages,
+extensions, skills, prompt templates, and themes built on the original tool set
+install and run unmodified.
 
-Pi does not include a built-in permission system for restricting filesystem, process, network, or credential access. By default, it runs with the permissions of the user and process that launched it.
+Packages that require the 0.99 built-in MCP, codemode, or tool-search APIs do
+not work in e. That is not a bug; it is the point.
 
-If you need stronger boundaries, containerize or sandbox Pi. See [packages/coding-agent/docs/containerization.md](packages/coding-agent/docs/containerization.md) for three patterns:
+Classifier models (such as TypeSafe's Jev) remain in the provider catalogs as
+inert model entries. Nothing in e loads or invokes a classifier; the only
+execution path it ever had was codemode, which does not exist in e.
 
-- **Gondolin extension**: keep `pi` and provider auth on the host while routing built-in tools and `!` commands into a local Linux micro-VM.
-- **Plain Docker**: run the whole `pi` process in a local container for simple isolation.
-- **OpenShell**: run the whole `pi` process in a policy-controlled sandbox.
+## e vs pi
 
-## Contributing
+| | e (`@subimpact/e`, binary `e`) | pi (`@earendil-works/pi-coding-agent`, binary `pi`) |
+|---|---|---|
+| Core tools | read, write, edit, bash | read, write, edit, bash (same) |
+| `mcp`, `codemode`, `tool-search` | **Removed** | Built-in extensions |
+| Sub-agents | None | None |
+| Classical pi packages | Work unmodified | Work |
+| Packages needing 0.99 built-in APIs | Do not (by design) | Do |
+| `llama.cpp` provider | Included | Included |
+| User config dir | `~/.e/agent` (override: `E_CODING_AGENT_DIR`) | `~/.pi/agent` |
+| Project config dir | `.pi/` (same as pi, stays shared) | `.pi/` |
+| Startup update check | Disabled (no pi.dev calls) | On |
+| Upstream fixes | Cherry-picked weekly; addons never flow back | Source |
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines and [AGENTS.md](AGENTS.md) for project-specific rules (for both humans and agents).  Longer term plans for Pi can also be found in [RFCs](https://rfc.earendil.com/keyword/pi/).
+## Attribution and licenses
+
+- e is a fork of [earendil-works/pi](https://github.com/earendil-works/pi), MIT licensed.
+  All credit for the agent harness, tools, TUI, provider layer, and extension system goes
+  to the upstream project and its contributors.
+- The npm publishing name, binary name, defaults, and docs differ; the code lineage does
+  not. See [LICENSE](LICENSE) (MIT, unchanged).
+- Third-party pi extensions, packages, and SDK usage built on the classical tool set
+  keep working unmodified.
 
 ## Development
 
 ```bash
 npm install --ignore-scripts  # Install all dependencies without running lifecycle scripts
-npm run build         # Refresh model data, then build all packages
-npm run build:offline # Rebuild using existing model data without network access
-npm run check         # Lint, format, and type check
-./test.sh            # Run tests (skips LLM-dependent tests without API keys)
-./pi-test.sh         # Run pi from sources (can be run from any directory)
+npm run build                 # Refresh model data, then build all packages
+npm run build:offline         # Rebuild using existing model data without network access
+npm run check                 # Lint, format, and type check
+./test.sh                     # Run tests (skips LLM-dependent tests without API keys)
+./pi-test.sh                  # Run the agent from sources (can be run from any directory)
 ```
 
-## Building standalone binaries from release source
+## Permissions & Containerization
 
-GitHub releases include a versioned source archive covered by the release's `SHA256SUMS` file. Extract it and run the same build script used for the official standalone binaries:
+e does not include a built-in permission system for restricting filesystem, process,
+network, or credential access. By default, it runs with the permissions of the user and
+process that launched it.
 
-```bash
-VERSION="<release-version>"
-tar -xzf "pi-${VERSION}-source.tar.gz"
-cd "pi-${VERSION}"
-./scripts/build-binaries.sh --offline-model-data --platform linux-x64 --out "$PWD/out"
-```
+If you need stronger boundaries, containerize or sandbox e. See
+[packages/coding-agent/docs/containerization.md](packages/coding-agent/docs/containerization.md)
+for three patterns:
 
-The archive includes release model data and native prebuilds. `--offline-model-data` uses that model data without refreshing provider catalogs. The script installs dependencies and builds the executable with its runtime assets; pass `--skip-install` if dependencies are already provided.
-
-## Supply-chain hardening
-
-We treat npm dependency changes as reviewed code changes.
-
-- Direct external dependencies are pinned to exact versions. Internal workspace packages remain version-ranged.
-- `.npmrc` sets `save-exact=true` and `min-release-age=2` to avoid same-day dependency releases during npm resolution.
-- `package-lock.json` is the dependency ground truth. Pre-commit blocks accidental lockfile commits unless `PI_ALLOW_LOCKFILE_CHANGE=1` is set.
-- `npm run check` verifies pinned direct deps, native TypeScript import compatibility, and the generated coding-agent shrinkwrap.
-- The published CLI package includes `packages/coding-agent/npm-shrinkwrap.json`, generated from the root lockfile, to pin transitive deps for npm users.
-- Release smoke tests use `npm run release:local` to build, pack, and create isolated npm and Bun installs outside the repo before tagging a release.
-- Local release installs, documented npm installs, and `pi update --self` use `--ignore-scripts` where supported.
-- CI installs with `npm ci --ignore-scripts`, and a scheduled GitHub workflow runs `npm audit --omit=dev` plus `npm audit signatures --omit=dev`.
-- Shrinkwrap generation has an explicit allowlist for dependency lifecycle scripts; new lifecycle-script deps fail checks until reviewed.
-
-## Share your OSS coding agent sessions
-
-If you use Pi or other coding agents for open source work, please share your sessions.
-
-Public OSS session data helps improve coding agents with real-world tasks, tool use, failures, and fixes instead of toy benchmarks.
-
-For the full explanation, see [this post on X](https://x.com/badlogicgames/status/2037811643774652911).
-
-To publish sessions, use [`badlogic/pi-share-hf`](https://github.com/badlogic/pi-share-hf). Read its README.md for setup instructions. All you need is a Hugging Face account, the Hugging Face CLI, and `pi-share-hf`.
-
-You can also watch [this video](https://x.com/badlogicgames/status/2041151967695634619), where I show how I publish my `pi-mono` sessions.
-
-I regularly publish my own `pi-mono` work sessions here:
-
-- [badlogicgames/pi-mono on Hugging Face](https://huggingface.co/datasets/badlogicgames/pi-mono)
+- **Gondolin extension**: keep the executable and provider auth on the host while routing
+  built-in tools and `!` commands into a local Linux micro-VM.
+- **Plain Docker**: run the whole process in a local container for simple isolation.
+- **OpenShell**: run the whole process in a policy-controlled sandbox.
 
 ## License
 
 MIT
-
-<p align="center">
-  <a href="https://pi.dev">pi.dev</a> domain graciously donated by
-  <br /><br />
-  <a href="https://exe.dev"><img src="packages/coding-agent/docs/images/exy.png" alt="Exy mascot" width="48" /><br />exe.dev</a>
-</p>

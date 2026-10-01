@@ -1,5 +1,4 @@
 import { accessSync, constants, existsSync, readFileSync, realpathSync } from "fs";
-import { createRequire } from "module";
 import { homedir } from "os";
 import { basename, dirname, join, resolve, sep, win32 } from "path";
 import { fileURLToPath } from "url";
@@ -389,7 +388,7 @@ export function findNodePackageDir(startDir: string): string {
 
 export function getPackageDir(): string {
 	// Allow override via environment variable (useful for Nix/Guix where store paths tokenize poorly)
-	const envDir = process.env.PI_PACKAGE_DIR;
+	const envDir = readAppEnv("PACKAGE_DIR");
 	if (envDir) {
 		return normalizePath(envDir);
 	}
@@ -477,40 +476,6 @@ export function getBundledInteractiveAssetPath(name: string): string {
 	return join(getInteractiveAssetsDir(), name);
 }
 
-let embeddedQuickJSWasmPath: string | undefined;
-
-/** Called by the Bun entry with the path of the QuickJS wasm file embedded in the compiled executable. */
-export function setEmbeddedQuickJSWasmPath(path: string): void {
-	embeddedQuickJSWasmPath = path;
-}
-
-/** Get path to `quickjs-wasi/quickjs.wasm`, the VM that runs codemode scripts. */
-export function getQuickJSWasmPath(): string {
-	return embeddedQuickJSWasmPath ?? createRequire(import.meta.url).resolve("quickjs-wasi/quickjs.wasm");
-}
-
-/** Resolve the codemode worker entry for a release runtime. */
-export function resolveCodemodeWorkerSpecifier(
-	runtime: "bun-binary" | "bundled-node" | "unbundled",
-	moduleUrl: string,
-): string | URL | undefined {
-	// Bun embeds explicit source entrypoints, but on Windows Bun 1.3 cannot map an absolute
-	// B:\~BUN URL back to one. A relative string with the original source extension works on
-	// every Bun platform.
-	if (runtime === "bun-binary") return "./src/extensions/codemode/worker.ts";
-	if (runtime === "bundled-node") return new URL("./codemode-worker.js", moduleUrl);
-	return undefined;
-}
-
-/**
- * Get the codemode worker entry, or undefined to use the worker that ships next to pi-codemode.
- * The Bun and Node release builds both pass the worker as an extra entrypoint.
- */
-export function getCodemodeWorkerSpecifier(): string | URL | undefined {
-	const runtime = isBunBinary ? "bun-binary" : isBundledNode ? "bundled-node" : "unbundled";
-	return resolveCodemodeWorkerSpecifier(runtime, import.meta.url);
-}
-
 // =============================================================================
 // App Config (from package.json piConfig)
 // =============================================================================
@@ -520,7 +485,12 @@ interface PackageJson {
 	version?: string;
 	piConfig?: {
 		name?: string;
+		/** Project-level config dir. Kept as ".pi" in e so project settings stay pi-compatible. */
 		configDir?: string;
+		/** Home config dir prefix for user settings (~/$homeConfigDir/agent). */
+		homeConfigDir?: string;
+		/** Whether `update self` may replace this package from a release channel. */
+		selfUpdate?: boolean;
 	};
 }
 
@@ -533,15 +503,37 @@ try {
 }
 
 const piConfigName: string | undefined = pkg.piConfig?.name;
-export const PACKAGE_NAME: string = pkg.name || "@earendil-works/pi-coding-agent";
-export const APP_NAME: string = piConfigName || "pi";
-export const APP_TITLE: string = piConfigName ? APP_NAME : "π";
+export const PACKAGE_NAME: string = pkg.name || "@subimpact/e";
+export const APP_NAME: string = piConfigName || "e";
+export const APP_TITLE: string = piConfigName ? APP_NAME : "e";
+// Project-level dir (<project>/.pi) stays pi-compatible; user-level config lives under ~/.e.
 export const CONFIG_DIR_NAME: string = pkg.piConfig?.configDir || ".pi";
+export const HOME_CONFIG_DIR_NAME: string = pkg.piConfig?.homeConfigDir || ".pi";
+export const SELF_UPDATE_ENABLED: boolean = pkg.piConfig?.selfUpdate ?? true;
 export const VERSION: string = pkg.version || "0.0.0";
 
-// e.g., PI_CODING_AGENT_DIR or TAU_CODING_AGENT_DIR
+// e's default distribution: `E_CODING_AGENT_DIR`, `E_CODING_AGENT_SESSION_DIR`.
 export const ENV_AGENT_DIR = `${APP_NAME.toUpperCase()}_CODING_AGENT_DIR`;
 export const ENV_SESSION_DIR = `${APP_NAME.toUpperCase()}_CODING_AGENT_SESSION_DIR`;
+
+// =============================================================================
+// Environment variables
+// =============================================================================
+
+/**
+ * Read a user-facing environment variable. e uses the `E_` prefix; the legacy upstream
+ * `PI_` names remain supported as aliases, with `E_` taking precedence.
+ */
+export function readAppEnv(name: string): string | undefined {
+	const eValue = process.env[`E_${name}`];
+	return eValue !== undefined ? eValue : process.env[`PI_${name}`];
+}
+
+/** Write an environment variable under both the `E_` and legacy `PI_` names so child processes keep working. */
+export function writeAppEnv(name: string, value: string): void {
+	process.env[`E_${name}`] = value;
+	process.env[`PI_${name}`] = value;
+}
 
 export function expandTildePath(path: string): string {
 	return normalizePath(path);
@@ -551,22 +543,26 @@ const DEFAULT_SHARE_VIEWER_URL = "https://pi.dev/session/";
 
 /** Get the share viewer URL for a gist ID. */
 export function getShareViewerUrl(gistId: string): string {
-	const baseUrl = process.env.PI_SHARE_VIEWER_URL || DEFAULT_SHARE_VIEWER_URL;
+	const baseUrl = readAppEnv("SHARE_VIEWER_URL") || DEFAULT_SHARE_VIEWER_URL;
 	return `${baseUrl}#${gistId}`;
 }
 
 // =============================================================================
-// User Config Paths (~/.pi/agent/*)
+// User Config Paths (~/.e/agent/*)
 // =============================================================================
 
-/** Get the agent config directory (e.g., ~/.pi/agent/) */
+/** Get the agent config directory (e.g., ~/.pi/agent/ for pi, ~/.e/agent/ for e) */
 export function getAgentDir(): string {
-	const envDir = process.env[ENV_AGENT_DIR];
+	const envDir = process.env[ENV_AGENT_DIR] ?? process.env.PI_CODING_AGENT_DIR;
 	if (envDir) {
 		return expandTildePath(envDir);
 	}
-	return join(homedir(), CONFIG_DIR_NAME, "agent");
+	return join(homedir(), HOME_CONFIG_DIR_NAME, "agent");
 }
+
+// =============================================================================
+// User Config Paths (~/.e/agent/*)
+// =============================================================================
 
 /** Get path to user's custom themes directory */
 export function getCustomThemesDir(): string {

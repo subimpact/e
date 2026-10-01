@@ -1,5 +1,11 @@
 # Environment Variables
 
+> **e fork note:** e reads the `E_*` variables documented below under their upstream `PI_*`
+> spellings (for example `E_OFFLINE` or legacy `PI_OFFLINE`, `E_CODING_AGENT_DIR` or legacy
+> `PI_CODING_AGENT_DIR`). Both spellings work; `E_*` takes precedence. Variables e sets for
+> child processes are written under both names. This page keeps the upstream `PI_*` spelling
+> for brevity.
+
 Pi uses environment variables in three ways:
 
 - Variables such as `PI_OFFLINE` configure the Pi process.

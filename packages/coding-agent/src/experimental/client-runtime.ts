@@ -4,9 +4,10 @@ import { Client, ServerError } from "@earendil-works/pi-client";
 import { createUnixTransportFactory, discoverUnixServers, type UnixServerRoute } from "@earendil-works/pi-client/unix";
 import { isServerId, type ServerId } from "@earendil-works/pi-protocol";
 import type { ClientCommand } from "../cli/experimental/commands/client.ts";
+import { readAppEnv } from "../config.ts";
 import { RadiusRelayAuthResolver } from "./radius-auth.ts";
 import { createRadiusClientTransportFactory, RadiusClientReconnect } from "./radius-relay.ts";
-import { activateServer, ENV_SERVER_ID, resolveServerDirectory, resolveSessionDirectory } from "./server.ts";
+import { activateServer, resolveServerDirectory, resolveSessionDirectory } from "./server.ts";
 import { AgentController } from "./services/agent-controller.ts";
 import {
 	createServerServiceSource,
@@ -83,7 +84,7 @@ export async function openClientRuntime(
 		if (routes.length === 0) {
 			const activated = await activateServer({
 				directory,
-				requestedServerId: process.env[ENV_SERVER_ID],
+				requestedServerId: readAppEnv("SERVER_ID"),
 				sessionDir: resolveSessionDirectory(),
 				provider: command.provider,
 				model: command.model,

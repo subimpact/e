@@ -24,7 +24,7 @@ import {
 import { createUnixServer, getUnixSocketPath } from "@earendil-works/pi-server/unix";
 import lockfile from "proper-lockfile";
 import type { AuthInput } from "../cli/experimental/command-options.ts";
-import { getAgentDir } from "../config.ts";
+import { getAgentDir, HOME_CONFIG_DIR_NAME, readAppEnv } from "../config.ts";
 import { resolvePath } from "../utils/paths.ts";
 import { CoordinatorConnection, type CoordinatorStartupLease, ensureCoordinator } from "./coordinator.ts";
 import { createPresentationFacetData } from "./plugins/bundled.ts";
@@ -48,11 +48,12 @@ import { createExperimentalServerServices } from "./services/server.ts";
 import type { SessionCreateOptions, SessionSummary } from "./services/sessions.ts";
 import { SessionPluginSelectionConflictError, SessionWorkerManager } from "./session-worker-manager.ts";
 
+// Legacy upstream names kept as exported aliases; reads go through readAppEnv (`E_` first).
 export const ENV_SERVER_DIR = "PI_SERVER_DIR";
 export const ENV_SERVER_ID = "PI_SERVER_ID";
 
 export function resolveServerDirectory(directory?: string): string {
-	return resolvePath(directory ?? process.env[ENV_SERVER_DIR] ?? join(homedir(), ".pi", "server"));
+	return resolvePath(directory ?? readAppEnv("SERVER_DIR") ?? join(homedir(), HOME_CONFIG_DIR_NAME, "server"));
 }
 
 export async function ensurePrivateServerDirectory(directory: string): Promise<void> {

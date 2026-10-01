@@ -11,7 +11,7 @@ export interface SourceInfo {
 	baseDir?: string;
 }
 
-/** Prefix of built-in tool and extension paths, such as `builtin:read` or `builtin:mcp`. */
+/** Prefix of built-in tool and extension paths, such as `builtin:read` or `builtin:llama.cpp`. */
 export const BUILTIN_PATH_PREFIX = "builtin:";
 
 /**

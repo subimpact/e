@@ -1,70 +1,55 @@
-<p align="center">
-  <a href="https://pi.dev">
-    <img alt="Pi logo" src="https://pi.dev/logo-auto.svg" width="128">
-  </a>
-</p>
-<p align="center">
-  <a href="https://discord.com/invite/3cU7Bz4UPx"><img alt="Discord" src="https://img.shields.io/badge/discord-community-5865F2?style=flat-square&logo=discord&logoColor=white" /></a>
-  <a href="https://www.npmjs.com/package/@earendil-works/pi-coding-agent"><img alt="npm" src="https://img.shields.io/npm/v/@earendil-works/pi-coding-agent?style=flat-square&logo=npm&logoColor=white" /></a>
-</p>
+# e
 
-> New issues and PRs from new contributors are closed automatically. Maintainers review closed submissions daily. See [CONTRIBUTING.md](https://github.com/earendil-works/pi/blob/main/CONTRIBUTING.md).
+e is a minimal terminal coding harness, forked from
+[earendil-works/pi](https://github.com/earendil-works/pi) (MIT). It is **not affiliated with
+the upstream project**.
 
-# Pi
-
-Pi is a minimal, extensible AI agent for the terminal. Adapt Pi to your workflow, not the other way around.
-
-Ask Pi to create the prompt templates, skills, extensions, and themes you need, or install a Pi package. Use Pi directly, automate it in print, JSON, or RPC mode, or build applications with the TypeScript SDK.
+e keeps the original pi promise, as code: one model, one loop, four tools (read, write, edit,
+bash). The `mcp`, `codemode`, and `tool-search` built-in extensions are **removed, not
+disabled**: there is no setting that brings them back. See the root
+[README](../../README.md) for the full fork story and the compatibility scope.
 
 ## Getting started
 
 Install the command-line interface with npm:
 
 ```bash
-npm install -g --ignore-scripts @earendil-works/pi-coding-agent
+npm install -g --ignore-scripts @subimpact/e
 ```
 
-This requires Node.js 22.19 or newer. Pi does not require dependency lifecycle scripts for a normal npm installation.
+This requires Node.js 22.19 or newer. e does not require dependency lifecycle scripts for a
+normal npm installation.
 
-On macOS or Linux, you can instead use the installer:
-
-```bash
-curl -fsSL https://pi.dev/install.sh | sh
-```
-
-Start Pi in the directory where you want it to work:
+Start e in the directory where you want it to work:
 
 ```bash
 cd /path/to/project
-pi
+e
 ```
 
-For a built-in AI provider, run `/login` inside Pi to connect a subscription or API key. Then give Pi a task.
+For a built-in AI provider, run `/login` inside e to connect a subscription or API key.
+Then give e a task.
+
+To reuse an existing pi installation's config, point `E_CODING_AGENT_DIR` (or the legacy
+`PI_CODING_AGENT_DIR`) at `~/.pi/agent`.
+
+Classical pi packages, extensions, skills, prompt templates, and themes install with
+`e install <package>` exactly as before. Packages that require the 0.99 built-in MCP,
+codemode, or tool-search APIs do not work in e, by design.
 
 See the [documentation](docs/index.md) for full setup and usage instructions.
 
 ## Development
 
-Clone the repository, install its dependencies, and run Pi from source:
-
 ```bash
-git clone https://github.com/earendil-works/pi
-cd pi
-npm install --ignore-scripts
-./pi-test.sh
+npm install --ignore-scripts  # Install all dependencies without running lifecycle scripts
+npm run build         # Refresh model data, then build all packages
+npm run build:offline # Rebuild using existing model data without network access
+npm run check         # Lint, format, and type check
+./test.sh             # Run tests (skips LLM-dependent tests without API keys)
+./pi-test.sh          # Run e from sources (can be run from any directory)
 ```
-
-`pi-test.sh` can be called from any directory and preserves the caller's working directory.
-
-Before submitting changes, run:
-
-```bash
-npm run check
-./test.sh
-```
-
-Read [CONTRIBUTING.md](https://github.com/earendil-works/pi/blob/main/CONTRIBUTING.md) before opening an issue or pull request. It defines the contribution gate, issue quality bar, and required checks. Read [AGENTS.md](https://github.com/earendil-works/pi/blob/main/AGENTS.md) for repository-specific implementation, testing, dependency, and release rules.
 
 ## License
 
-MIT
+MIT. See [../../LICENSE](../../LICENSE).
