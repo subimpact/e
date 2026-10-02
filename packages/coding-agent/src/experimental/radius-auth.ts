@@ -49,7 +49,7 @@ export class RadiusRelayAuthResolver {
 		);
 		if (token !== undefined && token.length > 0) return { gateway: this.#gateway, token };
 		if (options.required) {
-			throw new Error("Radius authentication is required; start Pi and run /login radius, then retry");
+			throw new Error("Radius authentication is required; start e and run /login radius, then retry");
 		}
 		return undefined;
 	}

@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [0.99.6] - 2026-10-02
+
+### Changed
+
+- No pi branding leaves e by default. The `enableInstallTelemetry` setting now defaults to `false`: e sends no attribution headers (the pi.dev referer, the "Pi" billing origin) and no install ping unless a user explicitly opts in. This closes the last quiet phone-home path found in the promise audit (commitment 8).
+- The remaining user-visible "Pi" strings say e: the `/bug` command description, the bug-report disclaimer (reports now go to the e maintainers, and the archive is named `e-bug-report-*.zip`), the external-editor notice, the tmux csi-u hint, the managed-update messages, the Radius relay close reasons, and the first-run analytics wording (that dialog itself never opens in e). The startup header keeps the e glyph.
+
+### Fixed
+
+- `npm run check` is green again: the browser smoke script no longer tries to bundle the deleted durable browser smoke entry, and the workspace package versions and the generated installer lock agree with 0.99.6.
+
 ## [0.99.5] - 2026-10-02
 
 ### Breaking Changes

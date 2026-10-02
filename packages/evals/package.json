@@ -1,6 +1,6 @@
 {
 	"name": "@earendil-works/pi-evals",
-	"version": "0.99.2",
+	"version": "0.99.6",
 	"private": true,
 	"type": "module",
 	"scripts": {

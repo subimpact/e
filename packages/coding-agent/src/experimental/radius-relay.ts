@@ -127,7 +127,7 @@ export class RadiusRelayHost {
 		this.#closed = true;
 		this.#abortController.abort();
 		this.#writer?.close();
-		this.#socket?.close(1000, "Pi server stopped");
+		this.#socket?.close(1000, "e server stopped");
 		this.#dropConnections();
 		await this.#loop;
 	}
@@ -473,7 +473,7 @@ class RadiusClientByteTransport implements ByteTransport {
 
 	close(): void {
 		if (!this.#markClosed()) return;
-		this.#socket.close(1000, "Pi client closed");
+		this.#socket.close(1000, "e client closed");
 	}
 
 	#fail(error: Error): void {

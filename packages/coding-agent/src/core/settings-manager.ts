@@ -1119,7 +1119,11 @@ export class SettingsManager {
 	}
 
 	getEnableInstallTelemetry(): boolean {
-		return this.settings.enableInstallTelemetry ?? true;
+		// e fork: default OFF. This flag gates the pi-brand provider attribution headers
+		// (pi.dev referer, "Pi" billing origin) and the install ping. e makes no phone-home
+		// by default and does not attribute its users' traffic to upstream pi (promise 8).
+		// A user can still opt in explicitly with `enableInstallTelemetry: true`.
+		return this.settings.enableInstallTelemetry ?? false;
 	}
 
 	setEnableInstallTelemetry(enabled: boolean): void {
