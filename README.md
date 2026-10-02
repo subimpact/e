@@ -45,6 +45,12 @@ dissent; forking is the other.
   binding commitments, checkable in source),
   [the story](https://e.subimpact.net/story/) (why the fork is the argument),
   and [pi vs e](https://e.subimpact.net/pi-vs-e/) (the one-table comparison).
+- **No attribution, no ping (0.99.6)**: a codebase audit against the founding
+  post's full list found one quiet phone-home left: with upstream's default
+  `enableInstallTelemetry: true`, requests to OpenRouter, NVIDIA, and
+  Cloudflare carried pi branding (`pi.dev` referer, "Pi" billing origin). e
+  defaults it to `false`: nothing about e's users leaves by default, not even
+  attribution upstream's way.
 
 ## What compatibility means
 

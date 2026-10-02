@@ -92,7 +92,9 @@ describe("createAgentSession provider attribution headers", () => {
 		} = {},
 	): Promise<ProviderHeaders | undefined> {
 		const settingsManager = SettingsManager.create(cwd, agentDir);
-		if (options.telemetryEnabled === false) {
+		if (options.telemetryEnabled === true) {
+			settingsManager.setEnableInstallTelemetry(true);
+		} else if (options.telemetryEnabled === false) {
 			settingsManager.setEnableInstallTelemetry(false);
 		}
 
@@ -139,12 +141,12 @@ describe("createAgentSession provider attribution headers", () => {
 		}
 	}
 
-	it("adds default attribution headers for OpenRouter models", async () => {
+	it("adds no attribution headers by default (e: no pi.brand attribution, promise 8)", async () => {
 		const headers = await captureHeaders(createModel("openrouter", "https://openrouter.ai/api/v1"));
 
-		expect(headers?.["HTTP-Referer"]).toBe("https://pi.dev");
-		expect(headers?.["X-OpenRouter-Title"]).toBe("pi");
-		expect(headers?.["X-OpenRouter-Categories"]).toBe("cli-agent");
+		expect(headers?.["HTTP-Referer"]).toBeUndefined();
+		expect(headers?.["X-OpenRouter-Title"]).toBeUndefined();
+		expect(headers?.["X-OpenRouter-Categories"]).toBeUndefined();
 	});
 
 	it("does not add attribution headers when telemetry is disabled", async () => {
@@ -157,16 +159,18 @@ describe("createAgentSession provider attribution headers", () => {
 		expect(headers?.["X-OpenRouter-Categories"]).toBeUndefined();
 	});
 
-	it("adds attribution headers for custom providers routed through OpenRouter", async () => {
+	it("adds no attribution headers by default for custom providers routed through OpenRouter (e)", async () => {
 		const headers = await captureHeaders(createModel("custom-openrouter", "https://openrouter.ai/api/v1"));
 
-		expect(headers?.["HTTP-Referer"]).toBe("https://pi.dev");
-		expect(headers?.["X-OpenRouter-Title"]).toBe("pi");
-		expect(headers?.["X-OpenRouter-Categories"]).toBe("cli-agent");
+		expect(headers?.["HTTP-Referer"]).toBeUndefined();
+		expect(headers?.["X-OpenRouter-Title"]).toBeUndefined();
+		expect(headers?.["X-OpenRouter-Categories"]).toBeUndefined();
 	});
 
-	it("preserves legacy OpenRouter base URL substring attribution matching", async () => {
-		const headers = await captureHeaders(createModel("custom-openrouter", "not-a-url-openrouter.ai"));
+	it("preserves legacy OpenRouter base URL substring attribution matching when telemetry is opted in", async () => {
+		const headers = await captureHeaders(createModel("custom-openrouter", "not-a-url-openrouter.ai"), {
+			telemetryEnabled: true,
+		});
 
 		expect(headers?.["HTTP-Referer"]).toBe("https://pi.dev");
 		expect(headers?.["X-OpenRouter-Title"]).toBe("pi");
@@ -189,16 +193,16 @@ describe("createAgentSession provider attribution headers", () => {
 		expect(headers?.["X-OpenRouter-Categories"]).toBe("provider-category");
 	});
 
-	it("adds default attribution headers for direct NVIDIA NIM endpoints", async () => {
+	it("adds no default attribution headers for direct NVIDIA NIM endpoints (e)", async () => {
 		const headers = await captureHeaders(createModel("custom-nim", "https://integrate.api.nvidia.com/v1"));
 
-		expect(headers?.["X-BILLING-INVOKE-ORIGIN"]).toBe("Pi");
+		expect(headers?.["X-BILLING-INVOKE-ORIGIN"]).toBeUndefined();
 	});
 
-	it("adds default attribution headers for the NVIDIA provider", async () => {
+	it("adds no default attribution headers for the NVIDIA provider (e)", async () => {
 		const headers = await captureHeaders(createModel("nvidia", "https://example.test/v1"));
 
-		expect(headers?.["X-BILLING-INVOKE-ORIGIN"]).toBe("Pi");
+		expect(headers?.["X-BILLING-INVOKE-ORIGIN"]).toBeUndefined();
 	});
 
 	it("does not add NVIDIA NIM attribution headers when telemetry is disabled", async () => {
@@ -222,9 +226,10 @@ describe("createAgentSession provider attribution headers", () => {
 		expect(headers?.["X-BILLING-INVOKE-ORIGIN"]).toBe("Request");
 	});
 
-	it("does not add NVIDIA NIM attribution headers for NVIDIA models routed through OpenRouter", async () => {
+	it("adds OpenRouter attribution headers for NVIDIA models routed through OpenRouter when telemetry is opted in", async () => {
 		const headers = await captureHeaders(
 			createModel("openrouter", "https://openrouter.ai/api/v1", "nvidia/nemotron-3-super-120b-a12b"),
+			{ telemetryEnabled: true },
 		);
 
 		expect(headers?.["HTTP-Referer"]).toBe("https://pi.dev");
