@@ -6,6 +6,10 @@
 
 - Added `Box.setPaddingX(...)` and `Text.setPaddingX(...)` (ported from upstream #10557).
 
+### Changed
+
+- `Home`/`End` now always move the editor cursor to the line start/end; fullscreen transcript top/bottom moved to `Ctrl+Home`/`Ctrl+End`, which no longer move the editor cursor (ported from upstream #10314).
+
 ## [0.99.2] - 2026-09-30
 
 ## [0.99.1] - 2026-09-29

@@ -7,6 +7,7 @@
 - Fixed a symlinked `AGENTS.md` in a git worktree nested inside its main repo causing no project context file to load (ported from upstream #10681).
 - Fixed syntax highlighting losing colors after the first line of multiline strings and comments in fenced code blocks (ported from upstream #10143).
 - Fixed `!!` command headers losing their dim color once output arrives, and `outputPad` now applies to `!` command output, tool output, and summary blocks (ported from upstream #10557).
+- `Home`/`End` now always move the editor cursor to the line start/end; fullscreen transcript top/bottom moved to `Ctrl+Home`/`Ctrl+End`, which no longer move the editor cursor (ported from upstream #10314).
 
 ## [0.99.9] - 2026-10-05
 
@@ -53,6 +54,7 @@
 - Sub-agents are carved out. The upstream sub-agent machinery (src/experimental/durable: the subagent tool, the /agents conversation switcher, the durable harness runtime) and the sub-agent example extension are deleted from the e tree. Sub-agents were one of the founding refusals; e keeps the refusal in code, not in configuration.
 - The header logo is the e glyph (Euler's number) and the startup hint text says e, not Pi. The onboarding line, the share title, and the logo easter egg follow the e identity.
 - Startup no longer shows a changelog popup for the 0.99.2 carve release: the popup only appears when a new version carries entries the user has not seen. (The 0.99.2 package shipped a stale pi changelog, so first launch showed a What's New block titled by the old brand; that stale block is gone.)
+
 
 ## [0.99.2] - 2026-09-30
 
