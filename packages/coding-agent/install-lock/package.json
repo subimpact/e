@@ -1,10 +1,10 @@
 {
 	"name": "@earendil-works/pi-coding-agent-install",
-	"version": "0.99.8",
+	"version": "0.99.9",
 	"private": true,
 	"description": "Lockfile root used by the Pi installer and updater.",
 	"dependencies": {
-		"@subimpact/e": "0.99.8"
+		"@subimpact/e": "0.99.9"
 	},
 	"overrides": {
 		"protobufjs": "7.6.6"
