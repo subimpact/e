@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [0.99.7] - 2026-10-05
+
+### Changed
+
+- Fullscreen is now the default TUI mode (cherry-picked from upstream, feature only). `tuiMode` can still be set to `regular` in settings, or overridden with `--tui-mode regular`. The fullscreen mode unlocks the 3D easter eggs.
+- The 3D easter egg has been upgraded to the shared renderer from upstream (cherry-picked, feature only): clicking the header logo dissolves the screen into braille dust while the logo lifts off, spins in 3D, and plays a sliding puzzle; `/arminsayshi` now tries the fullscreen 3D version first and falls back to the inline 2D art. The spinning logo is the e glyph (coral and blue), not the upstream pi bitmap.
+- Header logo internals renamed to e identity: `pi-logo.ts` is now `e-logo.ts` (`eLogoLines`), and the 3D model constants are e-branded.
+
 ## [0.99.6] - 2026-10-02
 
 ### Changed
