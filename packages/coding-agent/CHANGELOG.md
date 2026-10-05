@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.99.8] - 2026-10-05
+
+### Changed
+
+- The header glyph is a true lowercase e now. The previous mark (two coral blocks over a blue base with a notch) read as a flag or pennant rather than the constant it stands for. The new 4x4 bitmap draws the open top curve, the closed bowl, the middle bar as the eye, with the blue terminals where the stroke enters and leaves. Same brand colors, same two-line header size.
+
 ## [0.99.7] - 2026-10-05
 
 ### Changed
