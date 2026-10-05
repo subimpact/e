@@ -13,15 +13,19 @@ import {
 	visibleWidth,
 } from "@earendil-works/pi-tui";
 import { theme } from "../theme/theme.ts";
+import { ARMIN_HEIGHT, ARMIN_WIDTH, isArminPixel } from "./armin.ts";
 import { formatKeyText } from "./keybinding-hints.ts";
 
 /**
- * Fullscreen easter egg shown when the header logo is clicked. The current screen dissolves into braille dust,
- * spreading out from the logo, while the logo lifts off as a 3D object, flies to the center, grows, and spins.
- * Leaving plays the same timeline backwards, so the logo lands on the header and the screen reassembles.
+ * Fullscreen 3D easter eggs: the e logo (header logo click) and Armin (/arminsayshi). Both are bitmaps built from
+ * one block per pixel. The current screen dissolves into braille dust while the model spins in the center and its
+ * blocks play a sliding puzzle. Leaving plays the same timeline backwards, so the screen reassembles.
  *
- * The logo is ray cast per braille dot. A braille cell holds 2x4 dots and roughly square dots, so one logo
- * pixel (a half block) is exactly 2x2 dots and the header logo (4x2 cells) is 8x8 dots at the start.
+ * The e logo lifts off the header, flies to the center, and grows; the dust spreads out from the header logo.
+ * Armin grows out of a speck at the center; the dust spreads out from the center.
+ *
+ * The blocks are ray cast per braille dot. A braille cell holds 2x4 roughly square dots, so one pixel of a
+ * half-block bitmap is exactly 2x2 dots, and the header logo (4x2 cells) is 8x8 dots when it lifts off.
  */
 
 type Rgb = readonly [number, number, number];
@@ -52,7 +56,7 @@ interface Star {
 	speed: number;
 }
 
-interface LogoBox {
+interface Box {
 	min: readonly [number, number, number];
 	max: readonly [number, number, number];
 	color: Rgb;
@@ -61,38 +65,96 @@ interface LogoBox {
 interface Pose {
 	centerX: number;
 	centerY: number;
-	/** Braille dots per logo pixel at depth 0. */
+	/** Braille dots per model pixel at depth 0. */
 	scale: number;
 	yaw: number;
 	pitch: number;
 	roll: number;
 }
 
-const CORAL: Rgb = [228, 138, 122];
-const BLUE: Rgb = [79, 142, 179];
-const YELLOW: Rgb = [234, 182, 93];
-
 const DEPTH = 0.7;
-const CAMERA_DISTANCE = 10;
 const FLY_START = 0.1;
 const FLY_DURATION = 1.3;
+/** Braille dots per pixel when a model without an origin appears, growing from a speck at the center. */
+const START_SCALE = 0.1;
 
-/** Grid position of a logo block: column and row in the 4x4 logo, and layer (-1, 0, 1) in depth. */
+/** Grid position of a block: column and row in the bitmap, and layer (-1, 0, 1) in depth. */
 type Cell3 = readonly [number, number, number];
 
-// The logo's pixels on a 4x4 grid: an e (Euler's number). Each pixel is a block that the puzzle slides around.
-const LOGO_PIXELS = ["c..c", "cccc", "bbbc", "b..b"];
-const BLOCKS: Array<{ home: Cell3; color: Rgb }> = LOGO_PIXELS.flatMap((line, row) =>
-	[...line].flatMap((pixel, column) => {
-		const color = pixel === "c" ? CORAL : pixel === "b" ? BLUE : pixel === "y" ? YELLOW : undefined;
-		return color ? [{ home: [column, row, 0] as Cell3, color }] : [];
-	}),
-);
-// Farthest distance of any block corner from the origin, with blocks on the outer depth layers.
-const LOGO_RADIUS = Math.hypot(2, 2, 1 + DEPTH / 2);
+/** A bitmap built from one block per foreground pixel. Each is a block that the puzzle slides around. */
+interface Model {
+	/** Bitmap size in pixels. */
+	columns: number;
+	rows: number;
+	blocks: Array<{ home: Cell3; color: Rgb }>;
+	/** Camera distance from the model's center, in pixels. */
+	cameraDistance: number;
+	/** Farthest distance of any block corner from the center, with blocks on the outer depth layers. */
+	radius: number;
+	/** Largest share of the screen width the spinning model covers. */
+	widthShare: number;
+	/** Number of blocks the puzzle moves per step, given a random number from 0 to 1. */
+	puzzleMoves: (random: number) => number;
+	/**
+	 * Top-left cell of the model's half-block rendering on screen. The model lifts off from there and replaces it.
+	 * Undefined to grow out of the center.
+	 */
+	origin: { column: number; row: number } | undefined;
+}
 
-// The sliding puzzle: after the logo spun for a while, blocks slide into free neighboring cells, one step at
-// a time. Each cycle shuffles, flies every block back home, and holds the logo briefly.
+function createModel(
+	columns: number,
+	rows: number,
+	pixel: (column: number, row: number) => Rgb | undefined,
+	options: Pick<Model, "cameraDistance" | "widthShare" | "origin"> & {
+		puzzleMoves: (random: number, blockCount: number) => number;
+	},
+): Model {
+	const blocks: Model["blocks"] = [];
+	for (let row = 0; row < rows; row++) {
+		for (let column = 0; column < columns; column++) {
+			const color = pixel(column, row);
+			if (color) blocks.push({ home: [column, row, 0], color });
+		}
+	}
+	return {
+		columns,
+		rows,
+		blocks,
+		cameraDistance: options.cameraDistance,
+		radius: Math.hypot(columns / 2, rows / 2, 1 + DEPTH / 2),
+		widthShare: options.widthShare,
+		puzzleMoves: (random) => options.puzzleMoves(random, blocks.length),
+		origin: options.origin,
+	};
+}
+
+const CORAL: Rgb = [228, 138, 122];
+const BLUE: Rgb = [79, 142, 179];
+const E_LOGO_PIXELS = ["c..c", "cccc", "bbbc", "b..b"];
+const E_LOGO_COLORS: Record<string, Rgb> = { c: CORAL, b: BLUE };
+
+function eLogoModel(origin: { column: number; row: number }): Model {
+	return createModel(4, 4, (column, row) => E_LOGO_COLORS[E_LOGO_PIXELS[row]![column]!], {
+		cameraDistance: 10,
+		widthShare: 0.35,
+		puzzleMoves: (random) => (random < 0.4 ? 2 : 1),
+		origin,
+	});
+}
+
+function arminModel(color: Rgb): Model {
+	return createModel(ARMIN_WIDTH, ARMIN_HEIGHT, (column, row) => (isArminPixel(column, row) ? color : undefined), {
+		// Far enough that the perspective stays mild for a figure about 36 blocks tall.
+		cameraDistance: 80,
+		widthShare: 0.45,
+		puzzleMoves: (random, blockCount) => Math.round(blockCount * (0.03 + random * 0.04)),
+		origin: undefined,
+	});
+}
+
+// The sliding puzzle: after the model spun for a while, blocks slide into free neighboring cells, a few at a time.
+// Each cycle shuffles, flies every block back home, and holds the model briefly.
 const PUZZLE_START = FLY_START + FLY_DURATION + 3;
 const PUZZLE_STEP = 0.3;
 const PUZZLE_STEPS = 12;
@@ -113,18 +175,19 @@ const PUZZLE_MOVES: Cell3[] = [
 ];
 
 /** Block positions after each step of one shuffle cycle, starting at home. Deterministic per cycle. */
-function shuffleSteps(cycle: number): Cell3[][] {
-	let positions: Cell3[] = BLOCKS.map((block) => block.home);
+function shuffleSteps(model: Model, cycle: number): Cell3[][] {
+	const { columns, rows } = model;
+	let positions: Cell3[] = model.blocks.map((block) => block.home);
 	const steps = [positions];
 	const lastMoved = new Set<number>();
 	let random = cycle * 7_919 + 1;
 	const next = () => hash(random++);
-	const key = ([x, y, z]: Cell3) => (z + 1) * 16 + y * 4 + x;
+	const key = ([x, y, z]: Cell3) => ((z + 1) * rows + y) * columns + x;
 	for (let step = 0; step < PUZZLE_STEPS; step++) {
 		const occupied = new Set(positions.map(key));
 		const nextPositions = [...positions];
 		const moved = new Set<number>();
-		const moveCount = next() < 0.4 ? 2 : 1;
+		const moveCount = model.puzzleMoves(next());
 		for (let move = 0; move < moveCount; move++) {
 			const candidates: Array<{ block: number; target: Cell3 }> = [];
 			for (let block = 0; block < positions.length; block++) {
@@ -132,7 +195,7 @@ function shuffleSteps(cycle: number): Cell3[][] {
 				const [x, y, z] = positions[block]!;
 				for (const [dx, dy, dz] of PUZZLE_MOVES) {
 					const target: Cell3 = [x + dx, y + dy, z + dz];
-					if (target[0] < 0 || target[0] > 3 || target[1] < 0 || target[1] > 3) continue;
+					if (target[0] < 0 || target[0] >= columns || target[1] < 0 || target[1] >= rows) continue;
 					if (target[2] < -1 || target[2] > 1 || occupied.has(key(target))) continue;
 					candidates.push({ block, target });
 				}
@@ -419,11 +482,11 @@ interface Face {
 }
 
 /**
- * Renders the logo blocks into braille cells. Only faces that point at the camera and are not covered by a
+ * Renders the model's blocks into braille cells. Only faces that point at the camera and are not covered by a
  * touching block are drawn. Each face is rasterized over its projected bounds by intersecting each dot's ray
  * with the face's plane, with a depth buffer resolving overlaps. Buffers are reused between frames.
  */
-class LogoRaster {
+class BlockRaster {
 	/** Braille dot bits per cell. */
 	bits = new Uint8Array(0);
 	/** Lit dots per cell. */
@@ -439,17 +502,22 @@ class LogoRaster {
 	/** Ray parameter of the nearest hit per dot; smaller is nearer. */
 	private depth = new Float32Array(0);
 	/** Face index + 1 of the nearest hit per dot, 0 for none. */
-	private faceIds = new Uint8Array(0);
+	private faceIds = new Uint16Array(0);
 	/** Cells written by the previous frame, cleared before the next one. */
 	private dirty: { minX: number; minY: number; maxX: number; maxY: number } | undefined;
 	/** Cells with a halo from the previous frame, cleared before the next one. */
 	private haloDirty: { minX: number; minY: number; maxX: number; maxY: number } | undefined;
+	private readonly cameraDistance: number;
+
+	constructor(cameraDistance: number) {
+		this.cameraDistance = cameraDistance;
+	}
 
 	render(
 		width: number,
 		height: number,
 		pose: Pose,
-		boxes: readonly LogoBox[],
+		boxes: readonly Box[],
 		background: Rgb,
 		haloStrength: number,
 	): void {
@@ -465,7 +533,7 @@ class LogoRaster {
 			this.haloRgb = new Float32Array(width * height * 3);
 			this.haloDirty = undefined;
 			this.depth = new Float32Array(dotWidth * dotHeight).fill(Infinity);
-			this.faceIds = new Uint8Array(dotWidth * dotHeight);
+			this.faceIds = new Uint16Array(dotWidth * dotHeight);
 			this.dirty = undefined;
 		} else if (this.dirty) {
 			const { minX, minY, maxX, maxY } = this.dirty;
@@ -487,8 +555,9 @@ class LogoRaster {
 
 		const m = rotation(pose.yaw, pose.pitch, pose.roll);
 		const { centerX, centerY, scale } = pose;
-		// The camera sits at (0, 0, CAMERA_DISTANCE) in camera space; object space is the transpose rotation.
-		const origin = [m[6]! * CAMERA_DISTANCE, m[7]! * CAMERA_DISTANCE, m[8]! * CAMERA_DISTANCE];
+		const cameraDistance = this.cameraDistance;
+		// The camera sits at (0, 0, cameraDistance) in camera space; object space is the transpose rotation.
+		const origin = [m[6]! * cameraDistance, m[7]! * cameraDistance, m[8]! * cameraDistance];
 		const light = isLight(background);
 		const faces = this.visibleFaces(m, origin, pose, boxes, dotWidth, dotHeight, light);
 		if (faces.length === 0) return;
@@ -521,9 +590,9 @@ class LogoRaster {
 			const sx = (face.minX + 0.5 - centerX) / scale;
 			for (let dotY = face.minY; dotY <= face.maxY; dotY++) {
 				const sy = (dotY + 0.5 - centerY) / scale;
-				let directionA = m[a]! * sx + m[3 + a]! * sy - m[6 + a]! * CAMERA_DISTANCE;
-				let directionU = m[u]! * sx + m[3 + u]! * sy - m[6 + u]! * CAMERA_DISTANCE;
-				let directionV = m[v]! * sx + m[3 + v]! * sy - m[6 + v]! * CAMERA_DISTANCE;
+				let directionA = m[a]! * sx + m[3 + a]! * sy - m[6 + a]! * cameraDistance;
+				let directionU = m[u]! * sx + m[3 + u]! * sy - m[6 + u]! * cameraDistance;
+				let directionV = m[v]! * sx + m[3 + v]! * sy - m[6 + v]! * cameraDistance;
 				let index = dotY * dotWidth + face.minX;
 				for (let dotX = face.minX; dotX <= face.maxX; dotX++, index++) {
 					const t = (face.plane - originA) / directionA;
@@ -557,7 +626,7 @@ class LogoRaster {
 				if (id === 0) continue;
 				const face = faces[id - 1]!;
 				// Points farther from the camera fade slightly toward the background for depth.
-				const fog = clamp01(0.15 - CAMERA_DISTANCE * (1 - depth[index]!) * 0.12) * (light ? 0.5 : 1);
+				const fog = clamp01(0.15 - cameraDistance * (1 - depth[index]!) * 0.12) * (light ? 0.5 : 1);
 				faceIds[index] = 0;
 				depth[index] = Infinity;
 				const cellX = dotX >> 1;
@@ -671,12 +740,13 @@ class LogoRaster {
 		m: number[],
 		origin: number[],
 		pose: Pose,
-		boxes: readonly LogoBox[],
+		boxes: readonly Box[],
 		dotWidth: number,
 		dotHeight: number,
 		lightBackground: boolean,
 	): Face[] {
 		const faces: Face[] = [];
+		const cameraDistance = this.cameraDistance;
 		for (const box of boxes) {
 			for (let a = 0; a < 3; a++) {
 				const u = (a + 1) % 3;
@@ -710,7 +780,7 @@ class LogoRaster {
 							const x = m[0]! * corner[0]! + m[1]! * corner[1]! + m[2]! * corner[2]!;
 							const y = m[3]! * corner[0]! + m[4]! * corner[1]! + m[5]! * corner[2]!;
 							const z = m[6]! * corner[0]! + m[7]! * corner[1]! + m[8]! * corner[2]!;
-							const perspective = (pose.scale * CAMERA_DISTANCE) / (CAMERA_DISTANCE - z);
+							const perspective = (pose.scale * cameraDistance) / (cameraDistance - z);
 							const screenX = pose.centerX + x * perspective;
 							const screenY = pose.centerY + y * perspective;
 							minX = Math.min(minX, screenX);
@@ -761,13 +831,10 @@ class LogoRaster {
 	}
 }
 
-export interface PiLogoAnimationOptions {
-	/** The screen to dissolve, as rendered lines. */
-	screen: readonly string[];
-	/** Terminal cell of the header logo's top-left corner. */
-	logoColumn: number;
-	logoRow: number;
-}
+/**
+ * Which easter egg to play. The e logo lifts off the header logo, whose top-left cell is at `column`, `row`.
+ */
+export type EasterEgg3d = { kind: "e-logo"; column: number; row: number } | { kind: "armin" };
 
 let playing = false;
 
@@ -775,7 +842,7 @@ let playing = false;
  * Show the animation as a fullscreen overlay until it is dismissed. The overlay takes focus and mouse input and
  * returns focus when hidden, so the rest of the UI keeps running underneath untouched.
  */
-export async function playPiLogoAnimation(tui: TUI, options: PiLogoAnimationOptions): Promise<void> {
+export async function playEasterEgg3d(tui: TUI, screen: readonly string[], egg: EasterEgg3d): Promise<void> {
 	if (playing) return;
 	playing = true;
 	// Fading needs the terminal's actual default colors; the theme only knows its own.
@@ -791,16 +858,20 @@ export async function playPiLogoAnimation(tui: TUI, options: PiLogoAnimationOpti
 		playing = false;
 		return;
 	}
-	const animation = new PiLogoAnimation(tui, options, colors, () => {
+	const model =
+		egg.kind === "armin" ? arminModel(toRgb(theme.colors.accent)) : eLogoModel({ column: egg.column, row: egg.row });
+	const animation = new EasterEgg3dAnimation(tui, screen, model, colors, () => {
 		playing = false;
 		overlay.hide();
 	});
 	const overlay = tui.showOverlay(animation, { anchor: "top-left", width: "100%", maxHeight: "100%" });
 }
 
-export class PiLogoAnimation implements Component {
+export class EasterEgg3dAnimation implements Component {
 	private readonly tui: TUI;
-	private readonly options: PiLogoAnimationOptions;
+	/** The screen to dissolve, as rendered lines. */
+	private readonly screen: readonly string[];
+	private readonly model: Model;
 	private readonly foreground: Rgb;
 	private readonly background: Rgb;
 	private readonly onDone: () => void;
@@ -817,16 +888,19 @@ export class PiLogoAnimation implements Component {
 	private stars: Array<Star | undefined> = [];
 	private cells: ScreenCell[][] = [];
 	private readonly ansiCache = new Map<number, string>();
-	private readonly logo = new LogoRaster();
+	private readonly raster: BlockRaster;
 
 	constructor(
 		tui: TUI,
-		options: PiLogoAnimationOptions,
+		screen: readonly string[],
+		model: Model,
 		colors: { foreground: Rgb; background: Rgb },
 		onDone: () => void,
 	) {
 		this.tui = tui;
-		this.options = options;
+		this.screen = screen;
+		this.model = model;
+		this.raster = new BlockRaster(model.cameraDistance);
 		this.foreground = colors.foreground;
 		this.background = colors.background;
 		this.onDone = onDone;
@@ -913,18 +987,19 @@ export class PiLogoAnimation implements Component {
 			offsets = this.blockOffsets(time);
 		}
 
-		const boxes: LogoBox[] = BLOCKS.map((block, index) => {
+		const { columns, rows } = this.model;
+		const boxes: Box[] = this.model.blocks.map((block, index) => {
 			const [dx, dy, dz] = offsets[index]!;
-			const x = block.home[0] - 2 + dx;
-			const y = block.home[1] - 2 + dy;
+			const x = block.home[0] - columns / 2 + dx;
+			const y = block.home[1] - rows / 2 + dy;
 			return { min: [x, y, dz - DEPTH / 2], max: [x + 1, y + 1, dz + DEPTH / 2], color: block.color };
 		});
-		const logo = this.logo;
-		logo.render(width, height, pose, boxes, background, isLight(background) ? LIGHT_HALO_STRENGTH : 0);
+		const raster = this.raster;
+		raster.render(width, height, pose, boxes, background, isLight(background) ? LIGHT_HALO_STRENGTH : 0);
 		const halo = (index: number, base: Rgb | undefined): Rgb | undefined => {
-			const amount = logo.haloAmount[index]!;
+			const amount = raster.haloAmount[index]!;
 			if (amount <= 0) return base;
-			const color = logo.haloRgb;
+			const color = raster.haloRgb;
 			return mix(base ?? background, [color[index * 3]!, color[index * 3 + 1]!, color[index * 3 + 2]!], amount);
 		};
 		const backgroundFade = smooth(dissolveTime / BACKGROUND_FADE);
@@ -980,11 +1055,11 @@ export class PiLogoAnimation implements Component {
 					emit(hint.text[offset]!, offset < hint.keyLength ? hint.keyColor : hint.color, cellBg);
 					continue;
 				}
-				const dots = logo.bits[index]!;
+				const dots = raster.bits[index]!;
 				if (dots) {
 					// Quantized so neighboring cells on one face usually share a color and its escape sequence.
-					const step = LOGO_COLOR_STEP * logo.counts[index]!;
-					const rgb = logo.rgb;
+					const step = LOGO_COLOR_STEP * raster.counts[index]!;
+					const rgb = raster.rgb;
 					const color: Rgb = [
 						Math.round(rgb[index * 3]! / step) * LOGO_COLOR_STEP,
 						Math.round(rgb[index * 3 + 1]! / step) * LOGO_COLOR_STEP,
@@ -999,7 +1074,7 @@ export class PiLogoAnimation implements Component {
 					continue;
 				}
 				const dust = (dissolveTime - cell.delay) / DUST_DURATION;
-				if (dust < 0 && cell.width === 2 && !logo.bits[index + 1]) {
+				if (dust < 0 && cell.width === 2 && !raster.bits[index + 1]) {
 					emit(cell.text, mix(cell.fg, background, textFade), cellBg);
 					column++;
 					continue;
@@ -1046,16 +1121,17 @@ export class PiLogoAnimation implements Component {
 		this.onDone();
 	}
 
-	/** Each block's displacement from its place in the logo at `time`, in grid units. */
+	/** Each block's displacement from its place in the model at `time`, in grid units. */
 	private blockOffsets(time: number): Array<[number, number, number]> {
-		const home = (): Array<[number, number, number]> => BLOCKS.map(() => [0, 0, 0]);
+		const blocks = this.model.blocks;
+		const home = (): Array<[number, number, number]> => blocks.map(() => [0, 0, 0]);
 		if (time < PUZZLE_START) return home();
 		const cycle = Math.floor((time - PUZZLE_START) / PUZZLE_CYCLE);
 		const local = time - PUZZLE_START - cycle * PUZZLE_CYCLE;
-		if (this.shuffle?.cycle !== cycle) this.shuffle = { cycle, steps: shuffleSteps(cycle) };
+		if (this.shuffle?.cycle !== cycle) this.shuffle = { cycle, steps: shuffleSteps(this.model, cycle) };
 		const steps = this.shuffle.steps;
 		const offset = (position: Cell3, index: number): [number, number, number] => {
-			const block = BLOCKS[index]!.home;
+			const block = blocks[index]!.home;
 			return [position[0] - block[0], position[1] - block[1], position[2] - block[2]];
 		};
 		const shuffleEnd = PUZZLE_STEP * PUZZLE_STEPS;
@@ -1094,14 +1170,16 @@ export class PiLogoAnimation implements Component {
 	}
 
 	private pose(width: number, height: number, progress: number, time: number): Pose {
-		// At the start the front face must cover exactly the header logo's 8x8 dots despite the perspective.
-		const startScale = (2 * (CAMERA_DISTANCE - DEPTH / 2)) / CAMERA_DISTANCE;
-		const reach = LOGO_RADIUS * (CAMERA_DISTANCE / (CAMERA_DISTANCE - LOGO_RADIUS));
-		const endScale = Math.max(startScale, Math.min(width * 2 * 0.35, (height * 4 - 8) * 0.48) / reach);
-		const startX = this.options.logoColumn * 2 + 4;
-		const startY = this.options.logoRow * 4 + 4;
+		const { columns, rows, cameraDistance, radius, widthShare, origin } = this.model;
+		const reach = radius * (cameraDistance / (cameraDistance - radius));
+		// Lifting off, the front face must cover exactly the half-block cells (2x2 dots per pixel) despite the
+		// perspective.
+		const startScale = origin ? (2 * (cameraDistance - DEPTH / 2)) / cameraDistance : START_SCALE;
+		const endScale = Math.max(startScale, Math.min(width * 2 * widthShare, (height * 4 - 8) * 0.48) / reach);
 		const endX = width;
 		const endY = height * 2 - 2;
+		const startX = origin ? origin.column * 2 + columns : endX;
+		const startY = origin ? origin.row * 4 + rows : endY;
 		return {
 			centerX: startX + (endX - startX) * progress,
 			centerY: startY + (endY - startY) * progress,
@@ -1152,10 +1230,12 @@ export class PiLogoAnimation implements Component {
 	}
 
 	private prepareCells(width: number, foreground: Rgb): ScreenCell[][] {
-		const cells = parseScreen(this.options.screen, width, foreground, this.background);
-		const centerX = this.options.logoColumn + 2;
-		const centerY = this.options.logoRow + 1;
+		const cells = parseScreen(this.screen, width, foreground, this.background);
 		const height = Math.max(1, this.tui.terminal.rows);
+		const { columns, rows, origin } = this.model;
+		// The dust spreads out from where the model starts.
+		const centerX = origin ? origin.column + columns / 2 : width / 2;
+		const centerY = origin ? origin.row + rows / 4 : height / 2;
 		const farthest = Math.hypot(Math.max(centerX, width - centerX), Math.max(centerY, height - centerY) * 2);
 		for (let row = 0; row < cells.length; row++) {
 			const line = cells[row]!;
@@ -1174,17 +1254,19 @@ export class PiLogoAnimation implements Component {
 				cell.ink = glyphInk(owner.text, seed);
 			}
 		}
-		// The 3D logo replaces the header logo.
-		for (let row = this.options.logoRow; row < this.options.logoRow + 2; row++) {
-			const line = cells[row];
-			if (!line) continue;
-			for (let column = this.options.logoColumn; column < this.options.logoColumn + 4; column++) {
-				const cell = line[column];
-				if (cell) {
-					cell.text = " ";
-					cell.width = 1;
-					cell.ink = 0;
-					cell.bg = undefined;
+		// The 3D model replaces its half-block rendering on screen.
+		if (origin) {
+			for (let row = origin.row; row < origin.row + Math.ceil(rows / 2); row++) {
+				const line = cells[row];
+				if (!line) continue;
+				for (let column = origin.column; column < origin.column + columns; column++) {
+					const cell = line[column];
+					if (cell) {
+						cell.text = " ";
+						cell.width = 1;
+						cell.ink = 0;
+						cell.bg = undefined;
+					}
 				}
 			}
 		}

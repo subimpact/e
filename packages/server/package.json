@@ -1,6 +1,6 @@
 {
 	"name": "@earendil-works/pi-server",
-	"version": "0.99.6",
+	"version": "0.99.7",
 	"description": "experimental server package for pi",
 	"type": "module",
 	"main": "./dist/index.js",

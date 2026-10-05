@@ -16,7 +16,7 @@ const RESET = "\x1b[0m";
  * constant turns up everywhere in calculus. Brand colors stay fixed across themes; they follow the
  * terminal's color mode.
  */
-export function piLogoLines(): [string, string] {
+export function eLogoLines(): [string, string] {
 	const mode = theme.getColorMode();
 	const fg = (color: typeof CORAL) => foregroundAnsi(color, mode);
 	// Four cells per line, two half-block rows per cell. Top line: the open e-curve (coral); bottom
