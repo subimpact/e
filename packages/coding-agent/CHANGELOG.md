@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- The header glyph really is a lowercase e now. 0.99.8 shipped a top line drawn as solid blocks, which turned the mark back into a flag; the stroke now opens on the left with half blocks, the eye bar stops short of the right edge, and the blue terminals sit where the stroke enters and leaves. A render guard test decodes the glyph back to its 4x4 pixel grid so a flag-shaped regression fails the suite instead of shipping.
+
 ## [0.99.8] - 2026-10-05
 
 ### Changed

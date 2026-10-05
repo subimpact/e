@@ -11,21 +11,22 @@ const RESET = "\x1b[0m";
  *
  *   .    coral coral coral
  *   blue   .     .   coral
- *   coral coral coral coral     the middle bar is the e's eye
+ *   coral coral coral  .
  *   blue   .     .   blue
  *
- * The top stroke and the eye read as the lowercase e from the founding pitch; the blue pixels are
- * the terminals where the stroke enters and leaves the loop. Brand colors stay fixed across
- * themes; they follow the terminal's color mode.
+ * The top stroke opens on the left, the middle bar is the e's eye, and the blue pixels are the
+ * terminals where the stroke enters and leaves the loop. Every cell carries a single fill color
+ * (a half block renders one color per cell, so no cell mixes coral and blue). Brand colors stay
+ * fixed across themes; they follow the terminal's color mode.
  */
 export function eLogoLines(): [string, string] {
 	const mode = theme.getColorMode();
 	const fg = (color: typeof CORAL) => foregroundAnsi(color, mode);
 	// Line 1 (top two pixel rows): cells [▄ blue][▀ coral][▀ coral][█ coral]
-	// Line 2 (bottom two pixel rows): cells [▀▄ coral over blue][▀ coral][▀ coral][▀▄ coral over blue]
+	// Line 2 (bottom two pixel rows): cells [█ coral][▀ coral][▀ coral][▄ blue]
 	const c = fg(CORAL);
 	const b = fg(BLUE);
-	const top = `${b}▄${c}███${RESET} `;
-	const bottom = `${c}▀${b}▄${c}▀ ${c}▀ ${c}▀${b}▄${RESET}`;
+	const top = `${b}▄${c}▀▀${c}█${RESET} `;
+	const bottom = `${c}█${c}▀▀${b}▄${RESET}`;
 	return [top, bottom];
 }
