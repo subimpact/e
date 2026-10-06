@@ -6,6 +6,7 @@
 
 - Fixed a symlinked `AGENTS.md` in a git worktree nested inside its main repo causing no project context file to load (ported from upstream #10681).
 - Fixed syntax highlighting losing colors after the first line of multiline strings and comments in fenced code blocks (ported from upstream #10143).
+- Fixed `!!` command headers losing their dim color once output arrives, and `outputPad` now applies to `!` command output, tool output, and summary blocks (ported from upstream #10557).
 
 ## [0.99.9] - 2026-10-05
 

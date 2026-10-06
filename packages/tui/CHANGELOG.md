@@ -4,6 +4,11 @@
 
 ### Added
 
+- Added `Box.setPaddingX(...)` and `Text.setPaddingX(...)` (ported from upstream #10557).
+
+<<<<<<< HEAD
+### Added
+
 - Added `TuiAltScreen.getScreenLines()`, which returns the lines of the last rendered frame.
 
 ### Fixed
