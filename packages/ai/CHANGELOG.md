@@ -4,6 +4,7 @@
 
 <<<<<<< HEAD
 ### Fixed
+- Fixed `server_busy` and `servers are currently busy` provider errors ending the turn instead of being retried ([#10543](https://github.com/earendil-works/pi/issues/10543)) (ported from upstream #708dbb)
 - Fixed Bedrock requests that fail with `The pending stream has been canceled` after a stalled HTTP/2 connection not being retried automatically ([#10379](https://github.com/earendil-works/pi/issues/10379)) (ported from upstream #c792b4)
 - Fixed built-in model costs missing prompt-length pricing tiers for OpenCode, OpenCode Go, OpenRouter, Vercel AI Gateway, Google, MiniMax, and other models.dev providers, which undercounted the cost of long prompts on models such as Claude Haiku 5.5, Gemini 3.1 Pro, and GPT-5.4. OpenRouter time-of-day pricing is not modeled (ported from upstream #a10e74)
 - Fixed Anthropic browser login failing with "localhost refused to connect" when port 53692 is reserved or in use, for example by Hyper-V/WSL port exclusions on Windows: login now falls back to a free loopback port ([#10571](https://github.com/earendil-works/pi/issues/10571)) (ported from upstream #ae2fc2)
