@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Fixed
+- Fixed standalone binaries loading `.env`, `.env.local`, and `.env.development` from the launch directory into Pi's environment ([#10473](https://github.com/earendil-works/pi/issues/10473)) (ported from upstream #b6bd62)
 - Fixed Mistral streams being aborted mid-generation (e.g. during long thinking) after the request timeout; the timeout now applies only to waiting for response headers ([#10609](https://github.com/earendil-works/pi/issues/10609)) (ported from upstream 7b4e57)
 
 - Fixed a symlinked `AGENTS.md` in a git worktree nested inside its main repo causing no project context file to load (ported from upstream #10681).
