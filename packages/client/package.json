@@ -51,7 +51,7 @@
 		"@earendil-works/pi-protocol": "^0.99.2"
 	},
 	"devDependencies": {
-		"shx": "0.4.0",
+		"shx": "0.3.4",
 		"vitest": "4.1.11"
 	}
 }
