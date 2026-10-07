@@ -166,6 +166,7 @@ export {
 	type OverlayMargin,
 	type OverlayOptions,
 	type OverlayUnfocusOptions,
+	renderFakeCursor,
 	type SizeValue,
 	type TUI,
 	type TuiInputListener,
