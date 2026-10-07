@@ -6,6 +6,10 @@
 
 - Added `Box.setPaddingX(...)` and `Text.setPaddingX(...)` (ported from upstream #10557).
 
+### Fixed
+
+- Fixed Markdown links not being clickable in Herdr: `TERM_PROGRAM=herdr` is now detected as supporting OSC 8 hyperlinks (ported from upstream #10573).
+
 ### Changed
 
 - `Home`/`End` now always move the editor cursor to the line start/end; fullscreen transcript top/bottom moved to `Ctrl+Home`/`Ctrl+End`, which no longer move the editor cursor (ported from upstream #10314).
