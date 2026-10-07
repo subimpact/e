@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Fixed
+- Fixed Mistral responses that end with `finish_reason: "error"` not being retried ([#10487](https://github.com/earendil-works/pi/issues/10487)) (ported from upstream #59f995)
 
 - Fixed Mistral streams being aborted mid-generation (e.g. during long thinking) after the request timeout; the timeout now applies only to waiting for response headers (ported from upstream #10609).
 
