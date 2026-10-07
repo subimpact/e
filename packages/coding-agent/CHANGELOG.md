@@ -11,6 +11,7 @@
 - Fixed standalone binaries loading `.env`, `.env.local`, and `.env.development` from the launch directory into Pi's environment (ported from upstream 1ffb6bd62).
 
 - Fixed a symlinked `AGENTS.md` in a git worktree nested inside its main repo causing no project context file to load (ported from upstream 10681).
+- Fixed clipboard paste doing nothing in Termux, and failed copies there omitting the Termux:API install hint ([#10391](https://github.com/earendil-works/pi/issues/10391)) (ported from upstream 592fb57b7).
 - Fixed syntax highlighting losing colors after the first line of multiline strings and comments in fenced code blocks (ported from upstream 10143).
 - Fixed `!!` command headers losing their dim color once output arrives, and `outputPad` now applies to `!` command output, tool output, and summary blocks (ported from upstream 10557).
 - `Home`/`End` now always move the editor cursor to the line start/end; fullscreen transcript top/bottom moved to `Ctrl+Home`/`Ctrl+End`, which no longer move the editor cursor (ported from upstream 10314).
@@ -43,7 +44,6 @@
 
 ### Fixed
 
-- `npm run check` is green again: the browser smoke script no longer tries to bundle the deleted durable browser smoke entry, and the workspace package versions and the generated installer lock agree with 0.99.6.
 
 ## [0.99.5] - 2026-10-02
 
