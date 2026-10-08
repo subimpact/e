@@ -2817,7 +2817,6 @@ async function generateModels() {
 			maxTokens: 128000,
 		});
 	}
-
 	// The authenticated Copilot catalog advertised these models on 2026-09-22,
 	// but models.dev did not include them yet.
 	const missingCopilotModels: Model<Api>[] = [
