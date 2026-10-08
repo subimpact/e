@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Fixed
+- Fixed Mistral streams being aborted mid-generation (e.g. during long thinking) after the request timeout; the timeout now applies only to waiting for response headers ([#10609](https://github.com/earendil-works/pi/issues/10609)) (ported from upstream #7b4e57)
 
 - Fixed a symlinked `AGENTS.md` in a git worktree nested inside its main repo causing no project context file to load (ported from upstream #10681).
 - Fixed syntax highlighting losing colors after the first line of multiline strings and comments in fenced code blocks (ported from upstream #10143).
