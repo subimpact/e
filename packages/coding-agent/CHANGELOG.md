@@ -1,3 +1,8 @@
+## [Unreleased]
+
+### Fixed
+
+- Fixed a symlinked `AGENTS.md` in a git worktree nested inside its main repo causing no project context file to load (ported from upstream #10681).
 # Changelog
 
 ## [0.99.9] - 2026-10-05
