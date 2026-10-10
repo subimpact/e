@@ -6,16 +6,6 @@
 
 - Added `Box.setPaddingX(...)` and `Text.setPaddingX(...)` (ported from upstream #10557).
 
-<<<<<<< HEAD
-### Added
-
-- Added `TuiAltScreen.getScreenLines()`, which returns the lines of the last rendered frame.
-
-### Fixed
-
-- Fixed color bleeding past mouse selections and search highlights in fullscreen mode when a styled token ends at the highlight boundary ([#10169](https://github.com/earendil-works/pi/issues/10169))
-- Fixed memory retained per rendered message: `Markdown` holds its parsed tokens weakly, and `Markdown`, `Text`, and `Box` flatten their cached lines. A long assistant message keeps about a fifth of the heap it kept before.
-
 ## [0.99.2] - 2026-09-30
 
 ## [0.99.1] - 2026-09-29
