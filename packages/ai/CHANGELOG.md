@@ -5,6 +5,7 @@
 ### Fixed
 
 - Fixed Mistral streams being aborted mid-generation (e.g. during long thinking) after the request timeout; the timeout now applies only to waiting for response headers (ported from upstream #10609).
+
 ## [0.99.2] - 2026-09-30
 
 ### Added
