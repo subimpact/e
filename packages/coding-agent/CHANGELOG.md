@@ -8,6 +8,7 @@
 - Fixed clipboard paste doing nothing in Termux, and failed copies there omitting the Termux:API install hint ([#10391](https://github.com/earendil-works/pi/issues/10391)) (ported from upstream fb57b7)
 - Fixed standalone binaries loading `.env`, `.env.local`, and `.env.development` from the launch directory into Pi's environment ([#10473](https://github.com/earendil-works/pi/issues/10473)) (ported from upstream b6bd62)
 - Fixed Mistral streams being aborted mid-generation (e.g. during long thinking) after the request timeout; the timeout now applies only to waiting for response headers ([#10609](https://github.com/earendil-works/pi/issues/10609)) (ported from upstream 7b4e57)
+- Fixed standalone binaries loading `.env`, `.env.local`, and `.env.development` from the launch directory into Pi's environment (ported from upstream 1ffb6bd62).
 
 - Fixed a symlinked `AGENTS.md` in a git worktree nested inside its main repo causing no project context file to load (ported from upstream 10681).
 - Fixed syntax highlighting losing colors after the first line of multiline strings and comments in fenced code blocks (ported from upstream 10143).
