@@ -3,17 +3,16 @@
 ## [Unreleased]
 
 ### Fixed
-- Fixed `!` and RPC `bash` output keeping fragments of color codes, such as a stray `m`, when a code was split across output chunks ([#10504](https://github.com/earendil-works/pi/issues/10504)) (ported from upstream #7b6ff4)
-- Fixed images being dropped as "could not be resized" when running under `node --watch` on Node 24.19+ and 26.x, where Node posts its own messages on the image resize worker channel ([#10527](https://github.com/earendil-works/pi/issues/10527)) (ported from upstream #a6dd77)
-- Fixed clipboard paste doing nothing in Termux, and failed copies there omitting the Termux:API install hint ([#10391](https://github.com/earendil-works/pi/issues/10391)) (ported from upstream #fb57b7)
-- Fixed standalone binaries loading `.env`, `.env.local`, and `.env.development` from the launch directory into Pi's environment ([#10473](https://github.com/earendil-works/pi/issues/10473)) (ported from upstream #b6bd62)
+- Fixed `!` and RPC `bash` output keeping fragments of color codes, such as a stray `m`, when a code was split across output chunks ([#10504](https://github.com/earendil-works/pi/issues/10504)) (ported from upstream 7b6ff4)
+- Fixed images being dropped as "could not be resized" when running under `node --watch` on Node 24.19+ and 26.x, where Node posts its own messages on the image resize worker channel ([#10527](https://github.com/earendil-works/pi/issues/10527)) (ported from upstream a6dd77)
+- Fixed clipboard paste doing nothing in Termux, and failed copies there omitting the Termux:API install hint ([#10391](https://github.com/earendil-works/pi/issues/10391)) (ported from upstream fb57b7)
+- Fixed standalone binaries loading `.env`, `.env.local`, and `.env.development` from the launch directory into Pi's environment ([#10473](https://github.com/earendil-works/pi/issues/10473)) (ported from upstream b6bd62)
 - Fixed Mistral streams being aborted mid-generation (e.g. during long thinking) after the request timeout; the timeout now applies only to waiting for response headers ([#10609](https://github.com/earendil-works/pi/issues/10609)) (ported from upstream 7b4e57)
 
-- Fixed a symlinked `AGENTS.md` in a git worktree nested inside its main repo causing no project context file to load (ported from upstream #10681).
-- Fixed syntax highlighting losing colors after the first line of multiline strings and comments in fenced code blocks (ported from upstream #10143).
-- Fixed `!!` command headers losing their dim color once output arrives, and `outputPad` now applies to `!` command output, tool output, and summary blocks (ported from upstream #10557).
-- `Home`/`End` now always move the editor cursor to the line start/end; fullscreen transcript top/bottom moved to `Ctrl+Home`/`Ctrl+End`, which no longer move the editor cursor (ported from upstream #10314).
-
+- Fixed a symlinked `AGENTS.md` in a git worktree nested inside its main repo causing no project context file to load (ported from upstream 10681).
+- Fixed syntax highlighting losing colors after the first line of multiline strings and comments in fenced code blocks (ported from upstream 10143).
+- Fixed `!!` command headers losing their dim color once output arrives, and `outputPad` now applies to `!` command output, tool output, and summary blocks (ported from upstream 10557).
+- `Home`/`End` now always move the editor cursor to the line start/end; fullscreen transcript top/bottom moved to `Ctrl+Home`/`Ctrl+End`, which no longer move the editor cursor (ported from upstream 10314).
 ## [0.99.9] - 2026-10-05
 
 ### Fixed
