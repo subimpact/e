@@ -63,6 +63,8 @@ describe("Together models", () => {
 			minimal: null,
 			low: null,
 			medium: null,
+			high: "high",
+			xhigh: null,
 		});
 		expect(deepSeekV4.compat).toMatchObject({
 			thinkingFormat: "together",
