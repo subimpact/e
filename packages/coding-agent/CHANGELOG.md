@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.99.12] - 2026-10-10
+
+### Added
+
+- Claude Haiku 5.5 (`claude-haiku-5-5`) on the `anthropic` provider, with its prompt-length pricing tier (5x above 100k input tokens), adaptive thinking with `xhigh` and `max` effort, and Bedrock adaptive thinking, native `xhigh`, and block binding for Haiku 5.5. Haiku 5.5 does not get mid-conversation tool changes: e keeps the deferred-tool surface out.
+
+### Fixed
+
+- Kimi K3 Moonshot pricing pinned (Moonshot does not bill cache writes; models.dev reported the input rate as cache write).
+
 ## [0.99.11] - 2026-10-10
 
 ### Fixed
