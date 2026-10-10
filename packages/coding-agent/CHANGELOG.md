@@ -1,15 +1,23 @@
 # Changelog
 
-## [Unreleased]
+## [0.99.11] - 2026-10-10
 
 ### Fixed
 
+- Upstream sync wave (28eaccb8e to 42a3497d0 era, cherry-picked fixes only, addons rejected). Highlights: Together DeepSeek V4 Pro reasoning controls mapped; Claude Sonnet 5.5 pricing taken from models.dev; request context now estimated at 3.5 characters per token so large inputs keep an output limit; Mistral timeout and finish_reason retries; Bedrock Converse sends reasoning effort; HTTP/2 pending stream cancellation retries; transient server-busy provider errors retried; Anthropic OAuth callback falls back to a free port; Codex originator and User-Agent headers can be overridden; Herdr OSC 8 hyperlinks detected; symlinked AGENTS.md loads in nested git worktrees; syntax colors kept on multiline tokens; outputPad applied to all transcript blocks; Home and End go to the editor in fullscreen; ANSI sequences split across bash output chunks are stripped; Termux clipboard reads on Android; Node worker messages ignored during image resize; npm audit tightened (shx 0.3.4); brace-expansion pinned to 5.0.12; managed installs pruned; .env autoload disabled in the standalone binary build.
+- The daxnuts easter egg was removed.
+
+## [0.99.10] - 2026-10-09
+
+### Changed
+
+- The header glyph was retraced from the tom-thumb bitmap font lowercase e: the mouth opens under the crossbar, the bottom curve curls back under the bar, and the two-tone terminals were dropped as unreadable noise at 4x4. All coral. A pixel-decode guard test pins the exact cells so a relapse fails the suite.
+
+## [0.99.9] - 2026-10-05
 
 ### Fixed
 
 - The header glyph really is a lowercase e now. 0.99.8 shipped a top line drawn as solid blocks, which turned the mark back into a flag; the stroke now opens on the left with half blocks, the eye bar stops short of the right edge, and the blue terminals sit where the stroke enters and leaves. A render guard test decodes the glyph back to its 4x4 pixel grid so a flag-shaped regression fails the suite instead of shipping.
-
-## [0.99.8] - 2026-10-05
 
 ### Changed
 
