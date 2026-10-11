@@ -1218,7 +1218,6 @@ function getAnthropicMessagesCompat(provider: string, modelId: string): Anthropi
 	}
 	if (provider === "anthropic" && supportsAnthropicMidConvoSystemMessages(modelId)) {
 		compat.supportsMidConvoSystemMessages = true;
-		compat.supportsMidConvoToolChanges = true;
 	}
 	// OpenCode Zen and GitHub Copilot forward mid-conversation system messages but reject
 	// `tool_addition`/`tool_removal` blocks, so tool changes stay top-level there.

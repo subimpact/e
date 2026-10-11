@@ -223,8 +223,10 @@ export interface TranscriptTools {
  * top and load later ones where they appear; that only works when no tool was removed or
  * redeclared, so everything else sends the current tool list.
  */
-export function resolveTranscriptTools(messages: TranscriptMessages, supportsToolAdditions: boolean): TranscriptTools {
-	const anchorsAdditions = supportsToolAdditions && !hasNonAdditiveToolChanges(messages);
+export function resolveTranscriptTools(messages: TranscriptMessages, _supportsToolAdditions: boolean): TranscriptTools {
+	// Carve: mid-conversation tool changes are never sent. The request always carries the
+	// current tool list; supportsAdditionalTools/supportsToolSearch are ignored here.
+	const anchorsAdditions = false;
 	return {
 		requestTools: anchorsAdditions
 			? (getInitialSystemMessage(messages)?.toolsAdded ?? [])

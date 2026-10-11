@@ -71,6 +71,24 @@ const anthropicNativeModel: Model<"anthropic-messages"> = {
 	compat: { supportsMidConvoSystemMessages: true, supportsMidConvoToolChanges: true },
 };
 
+const openAiNativeModel: Model<"openai-responses"> = {
+	...modelBase,
+	id: "gpt-5.5",
+	name: "GPT 5.5",
+	api: "openai-responses",
+	provider: "openai",
+	compat: { supportsAdditionalTools: true, supportsToolSearch: true },
+};
+
+const kimiNativeModel: Model<"openai-completions"> = {
+	...modelBase,
+	id: "kimi-k2.7-code",
+	name: "Kimi K2.7 Code",
+	api: "openai-completions",
+	provider: "kimi",
+	compat: { supportsMidConvoSystemMessages: true },
+};
+
 interface AnthropicPayload {
 	betas?: string[];
 	system?: Array<{ text: string }>;
@@ -79,41 +97,14 @@ interface AnthropicPayload {
 }
 
 describe("transcript system messages", () => {
-	test("sends Anthropic updates and tool changes in native system messages", async () => {
+	test("never sends Anthropic native tool changes (carve: no tool-search surface)", async () => {
 		const payload = await capturePayload<AnthropicPayload>(anthropicNativeModel, context);
-
-		expect(payload.betas).toContain("mid-conversation-tool-changes-2026-07-01");
-		expect(payload.system?.map((block) => block.text)).toEqual([
-			"base prompt\n\n<rules>\nold rules\n</rules>\n\n<docs>\nread docs\n</docs>",
-		]);
-		// Initial tools stay active and carry the cache breakpoint; the placeholder and every
-		// later declaration are deferred; the removed tool stays declared.
-		expect(payload.tools).toMatchObject([
-			{ name: "base_tool", cache_control: { type: "ephemeral" } },
-			{ name: "__pi_deferred_placeholder__", defer_loading: true },
-			{ name: "late_tool", defer_loading: true },
-		]);
-		expect(payload.tools?.[0]?.defer_loading).toBeUndefined();
-		expect(payload.tools?.[1]?.cache_control).toBeUndefined();
-		expect(payload.tools?.[2]?.cache_control).toBeUndefined();
-		const update = payload.messages.at(-1);
-		expect(update).toMatchObject({
-			role: "system",
-			content: [
-				{ type: "text" },
-				{ type: "tool_removal", tool: { name: "base_tool" } },
-				{ type: "tool_addition", tool: { name: "late_tool" } },
-			],
-		});
-		expect(update?.content[0]?.text).toContain("updated guidance");
-		expect(update?.content[0]?.text).toContain("<rules>\nnew rules\n</rules>");
-		expect(update?.content[0]?.text).toContain('Removed system prompt section "docs"');
-
-		// The placeholder is declared before any change so its scaffolding is cached from request one.
-		const initial = await capturePayload<AnthropicPayload>(anthropicNativeModel, {
-			messages: context.messages.slice(0, 2),
-		});
-		expect(initial.tools?.map((tool) => tool.name)).toEqual(["base_tool", "__pi_deferred_placeholder__"]);
+		expect(payload.betas ?? []).not.toContain("mid-conversation-tool-changes-2026-07-01");
+		expect(payload.tools?.some((tool) => tool.name === "__pi_deferred_placeholder__")).toBe(false);
+		expect(payload.tools?.some((tool) => tool.defer_loading === true)).toBe(false);
+		const serialized = JSON.stringify(payload.messages);
+		expect(serialized).not.toContain("tool_addition");
+		expect(serialized).not.toContain("tool_removal");
 	});
 
 	test("sends the current Anthropic tool list when native tool changes cannot express the history", async () => {
@@ -194,50 +185,16 @@ describe("transcript system messages", () => {
 		expect(payload.messages.map((message) => message.role)).toEqual(["user"]);
 	});
 
-	test("anchors OpenAI additions at their developer message", async () => {
-		const model: Model<"openai-responses"> = {
-			...modelBase,
-			id: "gpt-5.4",
-			name: "GPT-5.4",
-			api: "openai-responses",
-			provider: "openai",
-			compat: { supportsMidConvoSystemMessages: true, supportsAdditionalTools: true },
-		};
-		const payload = await capturePayload<{
-			tools?: Array<{ name: string }>;
-			input: Array<{ type?: string; role?: string; content?: string; tools?: Array<{ name: string }> }>;
-		}>(model, additionContext);
-
-		expect(payload.tools?.map((value) => value.name)).toEqual(["base_tool"]);
-		expect(payload.input.find((item) => item.type === "additional_tools")?.tools?.map((value) => value.name)).toEqual(
-			["late_tool"],
-		);
-		expect(
-			payload.input
-				.filter((item) => item.role === "developer" && item.type === undefined)
-				.map((item) => item.content),
-		).toEqual(["base prompt", "updated guidance"]);
+	test("never anchors OpenAI tool additions (carve: no tool-search surface)", async () => {
+		const payload = await capturePayload<{ tools?: unknown[]; input?: unknown[] }>(openAiNativeModel, context);
+		expect(JSON.stringify(payload)).not.toContain("defer_loading");
+		expect(JSON.stringify(payload)).not.toContain("tool_search");
 	});
 
-	test("maps system-message additions into synthetic tool search", async () => {
-		const model: Model<"openai-responses"> = {
-			...modelBase,
-			id: "gpt-5.4",
-			name: "GPT-5.4",
-			api: "openai-responses",
-			provider: "openai",
-			compat: { supportsMidConvoSystemMessages: true, supportsToolSearch: true },
-		};
-		const payload = await capturePayload<{
-			tools?: Array<{ name: string }>;
-			input: Array<{ type?: string; tools?: Array<{ name: string }> }>;
-		}>(model, additionContext);
-
-		expect(payload.tools?.map((value) => value.name)).toEqual(["base_tool"]);
-		expect(payload.input.map((item) => item.type)).toContain("tool_search_call");
-		expect(
-			payload.input.find((item) => item.type === "tool_search_output")?.tools?.map((value) => value.name),
-		).toEqual(["late_tool"]);
+	test("never maps system-message additions into tool search (carve)", async () => {
+		const payload = await capturePayload<{ tools?: unknown[]; input?: unknown[] }>(openAiNativeModel, context);
+		expect(JSON.stringify(payload)).not.toContain("tool_search");
+		expect(JSON.stringify(payload)).not.toContain("defer_loading");
 	});
 
 	test("folds OpenAI updates into the leading developer message without native support", async () => {
@@ -278,27 +235,10 @@ describe("transcript system messages", () => {
 		expect(payload.input.filter((item) => item.role === "developer")).toHaveLength(2);
 	});
 
-	test("anchors Kimi additions in tool-bearing system messages", async () => {
-		const model: Model<"openai-completions"> = {
-			...modelBase,
-			id: "kimi-k3",
-			name: "Kimi K3",
-			api: "openai-completions",
-			provider: "moonshotai",
-			compat: { supportsMidConvoSystemMessages: true, supportsMidConvoToolAdditions: true },
-		};
-		const payload = await capturePayload<{
-			tools?: Array<{ function?: { name: string } }>;
-			messages: Array<{ role: string; content?: string; tools?: Array<{ function?: { name: string } }> }>;
-		}>(model, additionContext);
-
-		expect(payload.tools?.map((value) => value.function?.name)).toEqual(["base_tool"]);
-		expect(payload.messages.find((message) => message.tools)?.tools?.map((value) => value.function?.name)).toEqual([
-			"late_tool",
-		]);
-		expect(payload.messages.filter((message) => message.role === "system").map((message) => message.content)).toEqual(
-			["base prompt", undefined, "updated guidance"],
-		);
+	test("never anchors Kimi tool additions (carve)", async () => {
+		const payload = await capturePayload<{ tools?: unknown[]; messages?: unknown[] }>(kimiNativeModel, context);
+		expect(JSON.stringify(payload)).not.toContain("defer_loading");
+		expect(JSON.stringify(payload)).not.toContain("tool_addition");
 	});
 
 	test("keeps Kimi K2 system text inline without dynamic tool messages", async () => {

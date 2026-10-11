@@ -531,29 +531,6 @@ export interface ToolNamespace {
 	instructions?: string;
 }
 
-/** The tools of a session as {@link ToolDefinition.prepareLoadout} sees them. */
-export interface ToolLoadout {
-	/** Tools declared to the model (the active tools), in order, with their original descriptions. */
-	readonly declared: readonly AgentTool[];
-	/** Tools callable through `ctx.executeTool()`. */
-	readonly callable: readonly AgentTool[];
-	/** Every registered tool. */
-	readonly registered: readonly AgentTool[];
-	getExposure(name: string): ToolExposure;
-	getNamespace(name: string): ToolNamespace | undefined;
-}
-
-/** Changes {@link ToolDefinition.prepareLoadout} makes to what the model sees. */
-export interface ToolLoadoutChanges {
-	/** Model-facing descriptions of declared tools, by tool name. */
-	descriptions?: Readonly<Record<string, string>>;
-	/**
-	 * Declared tools whose declarations requests leave out. They stay active and callable, and the
-	 * transcript still declares them, so the active set survives `/tree` and resume.
-	 */
-	hiddenDeclarations?: readonly string[];
-}
-
 /**
  * Tool definition for registerTool().
  */
@@ -601,13 +578,6 @@ export interface ToolDefinition<TParams extends TSchema = TSchema, TDetails = un
 	 * activated by naming it in `--tools` or the `defaultTools` setting, or with `setActiveTools()`.
 	 */
 	defaultActive?: boolean;
-
-	/**
-	 * Adjust how the loadout is presented to the model while this tool is active. Called whenever
-	 * the active tools change. Tools that orchestrate other tools use it, for example to list the
-	 * callable tools in their own description.
-	 */
-	prepareLoadout?: (loadout: ToolLoadout) => ToolLoadoutChanges | undefined;
 
 	/**
 	 * Per-tool execution mode override.
