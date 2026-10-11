@@ -33,7 +33,6 @@ describe("getSupportedThinkingLevels", () => {
 				forceAdaptiveThinking: true,
 				supportsMidConvoEffort: true,
 				supportsMidConvoSystemMessages: true,
-				supportsMidConvoToolChanges: true,
 			},
 		});
 		expect(getSupportedThinkingLevels(model)).toEqual(["low", "medium", "high", "xhigh", "max"]);
@@ -49,7 +48,6 @@ describe("getSupportedThinkingLevels", () => {
 				forceAdaptiveThinking: true,
 				supportsMidConvoEffort: true,
 				supportsMidConvoSystemMessages: true,
-				supportsMidConvoToolChanges: true,
 				supportsTemperature: false,
 			},
 		});
@@ -148,10 +146,8 @@ describe("getSupportedThinkingLevels", () => {
 				contextWindow: 272000,
 				maxTokens: 128000,
 				compat: {
-					supportsAdditionalTools: true,
 					supportsMidConvoSystemMessages: true,
 					supportsOpenAIGrammarTools: true,
-					supportsToolSearch: true,
 				},
 			});
 		}

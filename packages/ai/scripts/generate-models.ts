@@ -354,22 +354,11 @@ const ANT_LING_RING_THINKING_LEVEL_MAP = {
 
 const BEDROCK_INFERENCE_PROFILE_ONLY_MODEL_IDS = new Set(["anthropic.claude-opus-5"]);
 const MODELS_DEV_OPENAI_UNSUPPORTED_MODEL_IDS = new Set(["gpt-5.6"]);
-const OPENAI_TOOL_SEARCH_MODEL_IDS = new Set([
+const OPENAI_MID_CONVO_SYSTEM_MESSAGE_MODEL_IDS = new Set([
 	"gpt-5.4",
 	"gpt-5.4-mini",
 	"gpt-5.4-pro",
 	"gpt-5.5",
-	"gpt-5.6-sol",
-	"gpt-5.6-terra",
-	"gpt-5.6-luna",
-	"gpt-6-astra",
-	"gpt-6-sol",
-	"gpt-6-luna",
-	"gpt-6.1-sol",
-]);
-const OPENAI_ADDITIONAL_TOOLS_MODEL_IDS = OPENAI_TOOL_SEARCH_MODEL_IDS;
-const OPENAI_MID_CONVO_SYSTEM_MESSAGE_MODEL_IDS = OPENAI_TOOL_SEARCH_MODEL_IDS;
-const OPENAI_CODEX_ADDITIONAL_TOOLS_MODEL_IDS = new Set([
 	"gpt-5.6-sol",
 	"gpt-5.6-terra",
 	"gpt-5.6-luna",
@@ -666,7 +655,6 @@ const OPENAI_COMPLETIONS_DEFAULT_COMPAT = {
 	supportsStrictMode: false,
 	supportsOpenAIGrammarTools: false,
 	supportsMidConvoSystemMessages: false,
-	supportsMidConvoToolAdditions: false,
 	sendSessionAffinityHeaders: false,
 	supportsLongCacheRetention: true,
 } satisfies Required<
@@ -771,8 +759,7 @@ function detectOpenAICompletionsCompat(model: Model<"openai-completions">): Open
 		supportsStrictMode: !isMoonshot && !isTogether && !isCloudflareAiGateway && !isNvidia && !isCerebras,
 		supportsOpenAIGrammarTools: false,
 		supportsMidConvoSystemMessages: false,
-		supportsMidConvoToolAdditions: false,
-		...(cacheControlFormat ? { cacheControlFormat } : {}),
+			...(cacheControlFormat ? { cacheControlFormat } : {}),
 		sendSessionAffinityHeaders: isOpenRouter,
 		supportsLongCacheRetention: !(
 			isTogether ||
@@ -887,20 +874,6 @@ function applyOpenAIGrammarToolCompatMetadata(model: Model<Api>): void {
 	model.compat = { ...(model.compat as OpenAIResponsesCompat | undefined), supportsOpenAIGrammarTools: true };
 }
 
-function applyOpenAIToolSearchMetadata(model: Model<Api>): void {
-	const isOpenAIResponses = model.provider === "openai" && model.api === "openai-responses";
-	const isOpenAICodex = model.provider === "openai-codex" && model.api === "openai-codex-responses";
-	if (!(isOpenAIResponses || isOpenAICodex) || !OPENAI_TOOL_SEARCH_MODEL_IDS.has(model.id)) return;
-	const supportsAdditionalTools =
-		(isOpenAIResponses && OPENAI_ADDITIONAL_TOOLS_MODEL_IDS.has(model.id)) ||
-		(isOpenAICodex && OPENAI_CODEX_ADDITIONAL_TOOLS_MODEL_IDS.has(model.id));
-	model.compat = {
-		...(model.compat as OpenAIResponsesCompat | undefined),
-		...(supportsAdditionalTools ? { supportsAdditionalTools: true } : {}),
-		supportsToolSearch: true,
-	};
-}
-
 // Moonshot Kimi K2.6/K2.7 accept system text after the conversation starts but reject
 // tool-bearing system messages. Kimi K3 accepts both forms; Fireworks and OpenCode pass
 // its tool-bearing form through. GitHub Copilot forwards K3 text but silently drops its
@@ -926,14 +899,12 @@ function applyOpenAICompletionsTranscriptMetadata(model: Model<Api>): void {
 	model.compat = {
 		...(model.compat as OpenAICompletionsCompat | undefined),
 		supportsMidConvoSystemMessages: true,
-		...(isKimiK3 ? { supportsMidConvoToolAdditions: true } : {}),
 	};
 }
 
 // Newer OpenAI Responses models accept developer messages after the conversation has started.
-// OpenCode Zen, OpenCode Go, and GitHub Copilot pass both those messages and
-// `additional_tools` items through to OpenAI unchanged; tool search is not verified
-// through those proxies.
+// OpenCode Zen, OpenCode Go, and GitHub Copilot pass those messages through to OpenAI
+// unchanged.
 const OPENAI_RESPONSES_PROXY_PROVIDERS = new Set(["opencode", "opencode-go", "github-copilot"]);
 
 function applyOpenAIResponsesTranscriptMetadata(model: Model<Api>): void {
@@ -950,7 +921,6 @@ function applyOpenAIResponsesTranscriptMetadata(model: Model<Api>): void {
 	model.compat = {
 		...(model.compat as OpenAIResponsesCompat | undefined),
 		supportsMidConvoSystemMessages: true,
-		...(isProxiedResponses ? { supportsAdditionalTools: true } : {}),
 	};
 }
 
@@ -1219,8 +1189,8 @@ function getAnthropicMessagesCompat(provider: string, modelId: string): Anthropi
 	if (provider === "anthropic" && supportsAnthropicMidConvoSystemMessages(modelId)) {
 		compat.supportsMidConvoSystemMessages = true;
 	}
-	// OpenCode Zen and GitHub Copilot forward mid-conversation system messages but reject
-	// `tool_addition`/`tool_removal` blocks, so tool changes stay top-level there.
+	// OpenCode Zen and GitHub Copilot forward mid-conversation system messages; the tool
+	// list always stays top-level.
 	if ((provider === "opencode" || provider === "github-copilot") && supportsAnthropicMidConvoSystemMessages(modelId)) {
 		compat.supportsMidConvoSystemMessages = true;
 	}
@@ -3354,7 +3324,6 @@ async function generateModels() {
 		applyThinkingLevelMetadata(model);
 		applyStrictToolCompatMetadata(model);
 		applyOpenAIGrammarToolCompatMetadata(model);
-		applyOpenAIToolSearchMetadata(model);
 		applyOpenAICompletionsTranscriptMetadata(model);
 		applyOpenAIResponsesTranscriptMetadata(model);
 		applyOpenAIExplicitPromptCacheMetadata(model);

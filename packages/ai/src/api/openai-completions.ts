@@ -45,12 +45,7 @@ import { getProviderEnvValue } from "../utils/provider-env.ts";
 import { retryProviderRequest } from "../utils/provider-retry.ts";
 import { sanitizeSurrogates } from "../utils/sanitize-unicode.ts";
 import { getSystemMessageText, renderSystemMessageUpdate } from "../utils/text.ts";
-import {
-	getDeclaredTools,
-	resolveTranscript,
-	resolveTranscriptTools,
-	type TranscriptContext,
-} from "../utils/transcript.ts";
+import { getCurrentTools, resolveTranscript, type TranscriptContext } from "../utils/transcript.ts";
 import {
 	appendGrammarToolInputJsonDelta,
 	createGrammarToolInputProperties,
@@ -173,25 +168,18 @@ type ResolvedOpenAICompletionsCompat = Omit<
 	| "supportsThinkingTokenBudget"
 	| "thinkingTokenBudgetField"
 	| "supportsMidConvoSystemMessages"
-	| "supportsMidConvoToolAdditions"
 	| "vllmPriority"
 > & {
 	cacheControlFormat?: OpenAICompletionsCompat["cacheControlFormat"];
 	supportsThinkingTokenBudget?: OpenAICompletionsCompat["supportsThinkingTokenBudget"];
 	thinkingTokenBudgetField?: OpenAICompletionsCompat["thinkingTokenBudgetField"];
 	supportsMidConvoSystemMessages?: OpenAICompletionsCompat["supportsMidConvoSystemMessages"];
-	supportsMidConvoToolAdditions?: OpenAICompletionsCompat["supportsMidConvoToolAdditions"];
 	vllmPriority?: OpenAICompletionsCompat["vllmPriority"];
 };
 
 type ResolvedChatTemplateKwargValue = string | number | boolean | null;
 
 type ChatCompletionInstructionMessageParam = ChatCompletionDeveloperMessageParam | ChatCompletionSystemMessageParam;
-
-type KimiToolSystemMessageParam = {
-	role: "system";
-	tools: OpenAI.Chat.Completions.ChatCompletionTool[];
-};
 
 type OpenAIReasoningDetailBase = Record<string, JsonValue> & {
 	id?: string | null;
@@ -341,7 +329,7 @@ export const stream: StreamFunction<"openai-completions", OpenAICompletionsOptio
 			const apiKey = getClientApiKey(model.provider, options?.apiKey, options?.headers);
 			const compat = getCompat(model);
 			const grammarToolInputProperties = createGrammarToolInputProperties(
-				getDeclaredTools(normalizedContext.messages),
+				getCurrentTools(normalizedContext.messages),
 				compat.supportsOpenAIGrammarTools,
 			);
 			const cacheRetention = resolveCacheRetention(options?.cacheRetention, options?.env);
@@ -806,14 +794,10 @@ function buildParams(
 	compat: ResolvedOpenAICompletionsCompat = getCompat(model),
 	cacheRetention: CacheRetention = resolveCacheRetention(options?.cacheRetention, options?.env),
 	grammarToolInputProperties: ReadonlyMap<string, string> = createGrammarToolInputProperties(
-		getDeclaredTools(context.messages),
+		getCurrentTools(context.messages),
 		compat.supportsOpenAIGrammarTools,
 	),
 ) {
-	const transcriptTools = resolveTranscriptTools(
-		context.messages,
-		compat.supportsMidConvoSystemMessages === true && compat.supportsMidConvoToolAdditions === true,
-	);
 	const messages = convertMessages(model, context, compat, {
 		grammarToolInputProperties,
 	});
@@ -852,8 +836,9 @@ function buildParams(
 		params.temperature = options.temperature;
 	}
 
-	if (transcriptTools.requestTools.length > 0) {
-		params.tools = convertTools(transcriptTools.requestTools, compat);
+	const tools = getCurrentTools(context.messages);
+	if (tools.length > 0) {
+		params.tools = convertTools(tools, compat);
 		if (compat.zaiToolStream) {
 			(params as any).tool_stream = true;
 		}
@@ -1226,10 +1211,6 @@ export function convertMessages(
 	};
 
 	const transformedMessages = transformMessages(normalizedContext.messages, model, (id) => normalizeToolCallId(id));
-	const transcriptTools = resolveTranscriptTools(
-		normalizedContext.messages,
-		compat.supportsMidConvoSystemMessages === true && compat.supportsMidConvoToolAdditions === true,
-	);
 	const instructionRole = model.reasoning && compat.supportsDeveloperRole ? "developer" : "system";
 
 	let lastRole: string | null = null;
@@ -1246,14 +1227,6 @@ export function convertMessages(
 		}
 
 		if (msg.role === "system") {
-			const addedTools = i > 0 && transcriptTools.anchorsAdditions ? (msg.toolsAdded ?? []) : [];
-			if (addedTools.length > 0) {
-				const kimiToolMessage: KimiToolSystemMessageParam = {
-					role: "system",
-					tools: convertTools(addedTools, compat),
-				};
-				params.push(kimiToolMessage as unknown as ChatCompletionMessageParam);
-			}
 			const text = i === 0 ? getSystemMessageText(msg) : renderSystemMessageUpdate(msg);
 			if (text.length > 0) {
 				params.push({ role: instructionRole, content: sanitizeSurrogates(text) });
@@ -1675,7 +1648,6 @@ function detectCompat(model: Model<"openai-completions">): ResolvedOpenAIComplet
 		supportsStrictMode: false,
 		supportsOpenAIGrammarTools: false,
 		supportsMidConvoSystemMessages: false,
-		supportsMidConvoToolAdditions: false,
 		cacheControlFormat,
 		sendSessionAffinityHeaders: isOpenRouter,
 		sessionAffinityFormat: isOpenRouter ? "openrouter" : "openai",
@@ -1723,8 +1695,6 @@ function getCompat(model: Model<"openai-completions">): ResolvedOpenAICompletion
 		supportsOpenAIGrammarTools: model.compat.supportsOpenAIGrammarTools ?? detected.supportsOpenAIGrammarTools,
 		supportsMidConvoSystemMessages:
 			model.compat.supportsMidConvoSystemMessages ?? detected.supportsMidConvoSystemMessages,
-		supportsMidConvoToolAdditions:
-			model.compat.supportsMidConvoToolAdditions ?? detected.supportsMidConvoToolAdditions,
 		cacheControlFormat: model.compat.cacheControlFormat ?? detected.cacheControlFormat,
 		sendSessionAffinityHeaders: model.compat.sendSessionAffinityHeaders ?? detected.sendSessionAffinityHeaders,
 		sessionAffinityFormat: model.compat.sessionAffinityFormat ?? detected.sessionAffinityFormat,

@@ -1,4 +1,4 @@
-import type { Context, Message, SystemMessage, Tool, ToolReference, TranscriptContext } from "../types.ts";
+import type { Context, Message, SystemMessage, Tool, TranscriptContext } from "../types.ts";
 import { contentText, getSystemMessageText } from "./text.ts";
 
 export type { TranscriptContext } from "../types.ts";
@@ -17,7 +17,7 @@ export function createInitialSystemMessage(
 	return {
 		role: "system",
 		content: systemPrompt ?? "",
-		...(hasTools ? { toolsAdded: tools } : {}),
+		...(hasTools ? { tools } : {}),
 		timestamp: 0,
 	};
 }
@@ -54,21 +54,23 @@ export function withoutInitialSystemMessage(messages: Message[]): Message[] {
 	return getInitialSystemMessage(messages) ? messages.slice(1) : messages;
 }
 
-/** Resolve the tools available after applying every transcript delta in order. */
+/**
+ * The complete tool list of the transcript. The last system message that defines
+ * `tools` wins; system messages without `tools` keep the current list. There is no
+ * delta replay: a transcript never changes tools incrementally.
+ */
 export function getCurrentTools(messages: TranscriptMessages): Tool[] {
-	const tools = new Map<string, Tool>();
-	for (const message of messages) {
-		if (!isSystemMessage(message)) continue;
-		for (const tool of message.toolsRemoved ?? []) tools.delete(tool.name);
-		for (const tool of message.toolsAdded ?? []) tools.set(tool.name, tool);
+	for (let i = messages.length - 1; i >= 0; i--) {
+		const message = messages[i] as { role: string; tools?: Tool[] };
+		if (message.role === "system" && message.tools !== undefined) return message.tools;
 	}
-	return [...tools.values()];
+	return [];
 }
 
 /**
  * Replay every system message into one leading system message holding the current
- * prompt and tools. Later `content` is appended to the base prompt, `sections` are
- * patched by name, and tools are resolved with {@link getCurrentTools}.
+ * prompt and tools. Later `content` is appended to the base prompt and `sections`
+ * are patched by name; tools resolve with {@link getCurrentTools}.
  */
 export function getCurrentSystemMessage(messages: TranscriptMessages): SystemMessage | undefined {
 	const content: string[] = [];
@@ -90,7 +92,7 @@ export function getCurrentSystemMessage(messages: TranscriptMessages): SystemMes
 		role: "system",
 		content: content.join("\n\n"),
 		...(sections.size > 0 ? { sections: Object.fromEntries(sections) } : {}),
-		...(tools.length > 0 ? { toolsAdded: tools } : {}),
+		...(tools.length > 0 ? { tools } : {}),
 		timestamp: timestamp ?? 0,
 	};
 }
@@ -139,98 +141,4 @@ export function toToolDeclaration(tool: Tool): Tool {
  */
 export function declarationsEqual(left: Tool, right: Tool): boolean {
 	return JSON.stringify(toToolDeclaration(left)) === JSON.stringify(toToolDeclaration(right));
-}
-
-export interface ToolStateChanges {
-	toolsAdded: Tool[];
-	toolsRemoved: ToolReference[];
-}
-
-/** Compare two complete tool states. A changed definition is a removal followed by an addition. */
-export function getToolStateChanges(previous: readonly Tool[], current: readonly Tool[]): ToolStateChanges {
-	const previousTools = new Map(previous.map((tool) => [tool.name, tool]));
-	const currentTools = new Map(current.map((tool) => [tool.name, tool]));
-	return {
-		toolsAdded: current
-			.filter((tool) => {
-				const previousTool = previousTools.get(tool.name);
-				return previousTool === undefined || !declarationsEqual(previousTool, tool);
-			})
-			.map(toToolDeclaration),
-		toolsRemoved: previous
-			.filter((tool) => {
-				const currentTool = currentTools.get(tool.name);
-				return currentTool === undefined || !declarationsEqual(tool, currentTool);
-			})
-			.map((tool) => ({ name: tool.name })),
-	};
-}
-
-/** Every definition referenced by transcript tool state, in first-declaration order. */
-export function getDeclaredTools(messages: TranscriptMessages): Tool[] {
-	const definitions = new Map<string, Tool>();
-	for (const message of messages) {
-		if (!isSystemMessage(message)) continue;
-		for (const tool of message.toolsAdded ?? []) definitions.set(tool.name, tool);
-	}
-	return [...definitions.values()];
-}
-
-/**
- * Whether a tool name was declared twice with different definitions. Transports that
- * reference tools by name (Anthropic `tool_addition`/`tool_removal`) cannot express that.
- */
-export function hasToolRedefinitions(messages: TranscriptMessages): boolean {
-	const declared = new Map<string, Tool>();
-	for (const message of messages) {
-		if (!isSystemMessage(message)) continue;
-		for (const tool of message.toolsAdded ?? []) {
-			const previous = declared.get(tool.name);
-			if (previous !== undefined && !declarationsEqual(previous, tool)) return true;
-			declared.set(tool.name, tool);
-		}
-	}
-	return false;
-}
-
-/** Whether tool history contains a removal or same-name redeclaration that an addition-only transport cannot replay. */
-export function hasNonAdditiveToolChanges(messages: TranscriptMessages): boolean {
-	const declared = new Set<string>();
-	for (const message of messages) {
-		if (!isSystemMessage(message)) continue;
-		if ((message.toolsRemoved?.length ?? 0) > 0) return true;
-		for (const tool of message.toolsAdded ?? []) {
-			if (declared.has(tool.name)) return true;
-			declared.add(tool.name);
-		}
-	}
-	return false;
-}
-
-export interface TranscriptTools {
-	/** Tools sent in the top-level request field. */
-	requestTools: Tool[];
-	/**
-	 * Whether later system messages carry their own `toolsAdded` as in-place additions.
-	 * When false, `requestTools` already holds the complete current tool set.
-	 */
-	anchorsAdditions: boolean;
-}
-
-/**
- * Split tool declarations between the top-level request field and in-place additions.
- * Transports that can anchor additions at a system message keep the initial tools at the
- * top and load later ones where they appear; that only works when no tool was removed or
- * redeclared, so everything else sends the current tool list.
- */
-export function resolveTranscriptTools(messages: TranscriptMessages, _supportsToolAdditions: boolean): TranscriptTools {
-	// Carve: mid-conversation tool changes are never sent. The request always carries the
-	// current tool list; supportsAdditionalTools/supportsToolSearch are ignored here.
-	const anchorsAdditions = false;
-	return {
-		requestTools: anchorsAdditions
-			? (getInitialSystemMessage(messages)?.toolsAdded ?? [])
-			: getCurrentTools(messages),
-		anchorsAdditions,
-	};
 }

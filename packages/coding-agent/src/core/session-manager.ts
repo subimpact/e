@@ -9,6 +9,7 @@ import {
 	type ToolResultMessage,
 	type Usage,
 	type UserMessage,
+	upgradeLegacyToolDeltas,
 	uuidv7,
 } from "@earendil-works/pi-ai";
 import { randomUUID } from "crypto";
@@ -564,9 +565,22 @@ export function buildSessionProjection(
 					: projectContextEntry(sourceEntry, edits.get(sourceEntry.id)),
 		}),
 	);
+	// Session files from e 0.99.12 and earlier record tool state as per-message deltas; upgrade
+	// them to snapshots. Rewritten messages are written back so the entries and the flat list
+	// share the same objects.
+	const flatMessages = projectedEntries.flatMap((entry) => entry.messages);
+	const messages = upgradeLegacyToolDeltas(flatMessages);
+	if (messages.some((message, index) => message !== flatMessages[index])) {
+		let offset = 0;
+		for (const entry of projectedEntries) {
+			const next = messages.slice(offset, offset + entry.messages.length);
+			if (next.some((message, index) => message !== entry.messages[index])) entry.messages = next;
+			offset += entry.messages.length;
+		}
+	}
 	return {
 		entries: projectedEntries,
-		messages: projectedEntries.flatMap((entry) => entry.messages),
+		messages,
 		thinkingLevel,
 		model,
 	};

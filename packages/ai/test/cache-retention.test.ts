@@ -547,7 +547,7 @@ describe("Cache Retention (PI_CACHE_RETENTION)", () => {
 						{
 							role: "system" as const,
 							content: "test",
-							toolsAdded: [
+							tools: [
 								{
 									name: "t1",
 									description: "strict tool",

@@ -1,6 +1,6 @@
 {
 	"name": "@subimpact/e",
-	"version": "0.99.12",
+	"version": "0.100.0",
 	"description": "Minimal terminal coding harness. Fork of earendil-works/pi (MIT) with the MCP, codemode, and tool-search built-ins removed; compatibility with the classical pi extension/package ecosystem.",
 	"type": "module",
 	"piConfig": {

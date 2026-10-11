@@ -67,14 +67,14 @@ export interface Conversation {
 }
 
 /**
- * System instructions and the tool loadout ride inside `messages` (pi-ai PR #9116, shimmed
- * here until it lands): a SystemMessage at its historical position.
+ * System instructions and the tool snapshot ride inside `messages`: a SystemMessage at its
+ * historical position. `tools` is the complete tool list from this point on; omitting it
+ * keeps the current list.
  */
 export interface SystemMessage {
 	role: "system";
 	content: string;
-	toolsAdded?: { name: string; description: string; parameters: TSchema }[];
-	toolsRemoved?: { name: string }[];
+	tools?: { name: string; description: string; parameters: TSchema }[];
 	timestamp: number;
 }
 export type Message = ModelMessage | SystemMessage;

@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.100.0] - 2026-10-11
+
+### Breaking
+
+- The tool loadout API is gone. `ToolDefinition.exposure`, the `ToolExposure` type, `prepareLoadout`, `ToolLoadout` and `ToolLoadoutChanges` were removed from the extension API. The model now sees exactly the active tools, the full list, on every request. `setActiveTools()` and `defaultActive` work as before.
+- `SystemMessage.toolsAdded` and `SystemMessage.toolsRemoved` were replaced by `SystemMessage.tools`, one complete tool list that replaces any earlier one. The compat flags `supportsMidConvoToolChanges`, `supportsAdditionalTools` and `supportsToolSearch` were removed from the model types and the generated model data.
+
+### Added
+
+- Extension compatibility warning. When you install an extension, and again when it loads, e checks it for the removed surfaces (hidden or model-only tools, loadout hooks, mid-conversation tool changes). It prints a warning that links to [e.subimpact.net/extensions](https://e.subimpact.net/extensions/) and carries on: the install succeeds, the tool registers as an ordinary visible tool, and the hook never runs.
+- `npm run check:promise` fails the build if any tool search, deferred tool or mid-conversation tool change identifier returns to the source, so an upstream sync cannot bring it back unnoticed.
+
+### Fixed
+
+- Commitment 3 (no tool search) was broken in 0.99.11 and 0.99.12. Upstream's mid-conversation tool change path arrived through the sync, and six Anthropic models (Claude Fable 5, Fable 5.1, Opus 4.8, Opus 5, Opus 5.5 and Sonnet 5.5) sent `defer_loading`, `tool_addition` and `tool_removal` with the matching beta header. The 0.99.12 note that e "keeps the deferred-tool surface out" was wrong: it held for Haiku 5.5 only. No provider receives these fields now.
+- Sessions saved by 0.99.12 and earlier still open: their tool deltas are converted to full tool lists when the session loads.
+
 ## [0.99.12] - 2026-10-10
 
 ### Added

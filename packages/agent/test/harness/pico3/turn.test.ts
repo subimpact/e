@@ -229,12 +229,11 @@ test("addTools control extends selectedTools before the continuation", async () 
 	await a.wait(ctx);
 	assert.deepEqual((await env.root.rewindable(ctx)).selectedTools, ["t", "extra"]);
 	const sys = (await env.entries()).filter((e) => e.kind === "pi.system");
-	assert.equal(sys.length, 2); // loadout changed → a delta before the continuation, listing only what was added
+	assert.equal(sys.length, 2); // loadout changed → a snapshot before the continuation, holding the full declared list
 	assert.deepEqual(
-		(sys[1]!.model![0] as { toolsAdded: { name: string }[] }).toolsAdded.map((t) => t.name),
-		["extra"],
+		(sys[1]!.model![0] as { tools: { name: string }[] }).tools.map((t) => t.name),
+		["t", "extra"],
 	);
-	assert.equal((sys[1]!.model![0] as { toolsRemoved?: unknown[] }).toolsRemoved, undefined);
 	const { messages } = await env.root.commit((tx) => tx.context(1), ctx);
 	assert.deepEqual(
 		effectiveTools(messages).map((t) => t.name),

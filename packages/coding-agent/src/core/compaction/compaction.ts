@@ -307,7 +307,7 @@ export function estimateTokens(message: AgentMessage): number {
 					if (section) chars += section.length;
 				}
 			}
-			if (system.toolsAdded) chars += JSON.stringify(system.toolsAdded).length;
+			if (system.tools) chars += JSON.stringify(system.tools).length;
 			return Math.ceil(chars / 4);
 		}
 		case "user": {

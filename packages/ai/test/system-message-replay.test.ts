@@ -7,9 +7,7 @@ import {
 	declarationsEqual,
 	getCurrentSystemMessage,
 	getCurrentSystemPrompt,
-	getToolStateChanges,
-	hasNonAdditiveToolChanges,
-	hasToolRedefinitions,
+	getCurrentTools,
 	normalizeContext,
 } from "../src/utils/transcript.ts";
 
@@ -23,7 +21,7 @@ const transcript = normalizeContext({
 			role: "system",
 			content: "base",
 			sections: { a: "<a>1</a>", b: "<b>1</b>" },
-			toolsAdded: [tool("first")],
+			tools: [tool("first")],
 			timestamp: 10,
 		},
 		{ role: "user", content: "hello", timestamp: 11 },
@@ -33,8 +31,7 @@ const transcript = normalizeContext({
 			role: "system",
 			content: "",
 			sections: { a: "<a>2</a>", b: null, c: "<c>1</c>" },
-			toolsRemoved: [{ name: "first" }],
-			toolsAdded: [tool("second")],
+			tools: [tool("second")],
 			timestamp: 14,
 		},
 	],
@@ -47,10 +44,14 @@ describe("system message replay", () => {
 			role: "system",
 			content: "base\n\nalso do this",
 			sections: { a: "<a>2</a>", c: "<c>1</c>" },
-			toolsAdded: [tool("second")],
+			tools: [tool("second")],
 			timestamp: 10,
 		});
 		expect(getCurrentSystemPrompt(transcript.messages)).toBe("base\n\nalso do this\n\n<a>2</a>\n\n<c>1</c>");
+		// The snapshot, not a delta: the last system message that defines tools wins.
+		expect(getCurrentTools(transcript.messages)).toEqual([tool("second")]);
+		expect(getCurrentTools([])).toEqual([]);
+		expect(getCurrentTools(transcript.messages.slice(0, 2))).toEqual([tool("first")]);
 	});
 
 	test("collapse keeps only non-system messages after the replayed head", () => {
@@ -74,13 +75,13 @@ describe("system message replay", () => {
 					role: "system",
 					content: "",
 					sections: { preamble: "You are pi." },
-					toolsAdded: [tool("x")],
+					tools: [tool("x")],
 					timestamp: 2,
 				},
 			],
 		});
 		expect(getCurrentSystemPrompt(context.messages)).toBe("You are pi.");
-		expect(collapseSystemMessages(context).messages[0]).toMatchObject({ role: "system", toolsAdded: [tool("x")] });
+		expect(collapseSystemMessages(context).messages[0]).toMatchObject({ role: "system", tools: [tool("x")] });
 	});
 
 	test("renders complete prompts and framed updates", () => {
@@ -102,7 +103,7 @@ describe("system message replay", () => {
 		expect(normalizeContext({ messages })).toEqual({ messages });
 		expect(normalizeContext({ systemPrompt: "", tools: [], messages })).toEqual({ messages });
 		expect(normalizeContext({ systemPrompt: "be brief", tools: [tool("a")], messages }).messages).toEqual([
-			{ role: "system", content: "be brief", toolsAdded: [tool("a")], timestamp: 0 },
+			{ role: "system", content: "be brief", tools: [tool("a")], timestamp: 0 },
 			...messages,
 		]);
 	});
@@ -112,34 +113,5 @@ describe("system message replay", () => {
 		expect(declarationsEqual(executable, tool("a"))).toBe(true);
 		expect(declarationsEqual(tool("a"), tool("a", "changed"))).toBe(false);
 		expect(declarationsEqual(tool("a"), { ...tool("a"), constrainedSampling: false })).toBe(false);
-	});
-
-	test("tool state changes treat changed definitions as removal plus addition", () => {
-		const changes = getToolStateChanges([tool("a"), tool("b")], [tool("b", "changed"), tool("c")]);
-		expect(changes).toEqual({
-			toolsAdded: [tool("b", "changed"), tool("c")],
-			toolsRemoved: [{ name: "a" }, { name: "b" }],
-		});
-		expect(getToolStateChanges([tool("a")], [tool("a")])).toEqual({ toolsAdded: [], toolsRemoved: [] });
-	});
-
-	test("detects non-additive tool history and redefinitions", () => {
-		expect(hasNonAdditiveToolChanges(transcript.messages)).toBe(true);
-		expect(hasToolRedefinitions(transcript.messages)).toBe(false);
-		const additive = normalizeContext({
-			messages: [
-				{ role: "system", content: "", toolsAdded: [tool("a")], timestamp: 1 },
-				{ role: "system", content: "", toolsAdded: [tool("b")], timestamp: 2 },
-			],
-		});
-		expect(hasNonAdditiveToolChanges(additive.messages)).toBe(false);
-		const redeclared = normalizeContext({
-			messages: [
-				{ role: "system", content: "", toolsAdded: [tool("a")], timestamp: 1 },
-				{ role: "system", content: "", toolsAdded: [tool("a", "changed")], timestamp: 2 },
-			],
-		});
-		expect(hasNonAdditiveToolChanges(redeclared.messages)).toBe(true);
-		expect(hasToolRedefinitions(redeclared.messages)).toBe(true);
 	});
 });

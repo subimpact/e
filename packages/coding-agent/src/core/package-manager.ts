@@ -42,6 +42,7 @@ import { spawnProcess, spawnProcessSync } from "../utils/child-process.ts";
 import { type GitSource, parseGitUrl } from "../utils/git.ts";
 import { canonicalizePath, isLocalPath, markPathIgnoredByCloudSync, resolvePath } from "../utils/paths.ts";
 import { stripBom } from "../utils/text.ts";
+import { collectExtensionSourceFiles, formatCompatWarning, scanExtensionFiles } from "./extensions/compat-check.ts";
 import { isStdoutTakenOver } from "./output-guard.ts";
 import { type PiManifest, readPiManifest } from "./pi-manifest.ts";
 import type { PackageSource, SettingsManager } from "./settings-manager.ts";
@@ -1040,10 +1041,12 @@ export class DefaultPackageManager implements PackageManager {
 		await this.withProgress("install", source, `Installing ${source}...`, async () => {
 			if (parsed.type === "npm") {
 				await this.installNpm(parsed, scope, false);
+				await this.warnIfPackageUsesRemovedFeatures(source, parsed, scope);
 				return;
 			}
 			if (parsed.type === "git") {
 				await this.installGit(parsed, scope);
+				await this.warnIfPackageUsesRemovedFeatures(source, parsed, scope);
 				return;
 			}
 			if (parsed.type === "local") {
@@ -1051,6 +1054,7 @@ export class DefaultPackageManager implements PackageManager {
 				if (!existsSync(resolved)) {
 					throw new Error(`Path does not exist: ${resolved}`);
 				}
+				await this.warnIfPackageUsesRemovedFeatures(source, parsed, scope);
 				return;
 			}
 			throw new Error(`Unsupported install source: ${source}`);
@@ -1392,11 +1396,44 @@ export class DefaultPackageManager implements PackageManager {
 	private async installParsedSource(parsed: ParsedSource, scope: SourceScope): Promise<void> {
 		if (parsed.type === "npm") {
 			await this.installNpm(parsed, scope, scope === "temporary");
+			await this.warnIfPackageUsesRemovedFeatures(parsed.name, parsed, scope);
 			return;
 		}
 		if (parsed.type === "git") {
 			await this.installGit(parsed, scope);
+			await this.warnIfPackageUsesRemovedFeatures(`${parsed.host}/${parsed.path}`, parsed, scope);
 			return;
+		}
+	}
+
+	/**
+	 * Warn (never block) when an installed package still uses surfaces e does not support:
+	 * tool loadout hooks, deferred or hidden tools, mid-conversation tool changes.
+	 */
+	private async warnIfPackageUsesRemovedFeatures(
+		source: string,
+		parsed: ParsedSource,
+		scope: SourceScope,
+	): Promise<void> {
+		try {
+			const dir =
+				parsed.type === "npm"
+					? this.getNpmInstallPath(parsed, scope)
+					: parsed.type === "git"
+						? this.getGitInstallPath(parsed, scope)
+						: this.resolvePath(parsed.path);
+			if (!existsSync(dir)) return;
+			const files = collectExtensionSourceFiles(dir, resolveExtensionEntries(dir) ?? []);
+			const findings = await scanExtensionFiles(files);
+			if (findings.length === 0) return;
+			this.emitProgress({
+				type: "progress",
+				action: "install",
+				source,
+				message: formatCompatWarning(source, findings),
+			});
+		} catch {
+			// The warning is best effort; an install must never fail over it.
 		}
 	}
 

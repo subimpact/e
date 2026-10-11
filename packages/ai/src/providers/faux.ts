@@ -197,11 +197,7 @@ function toolResultToText(message: ToolResultMessage): string {
 
 function messageToText(message: Message): string {
 	if (message.role === "system") {
-		return [
-			getSystemMessageText(message),
-			...(message.toolsRemoved?.map((tool) => `tool-:${JSON.stringify(tool)}`) ?? []),
-			...(message.toolsAdded?.map((tool) => `tool+:${JSON.stringify(tool)}`) ?? []),
-		]
+		return [getSystemMessageText(message), ...(message.tools?.map((tool) => `tool:${JSON.stringify(tool)}`) ?? [])]
 			.filter((part) => part.length > 0)
 			.join("\n");
 	}

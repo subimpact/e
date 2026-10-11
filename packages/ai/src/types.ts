@@ -516,10 +516,11 @@ export interface DeferredHandle {
  *
  * The leading system message is the system prompt. Later system messages change it:
  * `content` adds instructions from that point on, `sections` replace or remove named
- * prompt sections, and `toolsAdded`/`toolsRemoved` change the tool set. Replaying
- * every system message in order yields the current prompt and tools. Providers that
- * accept system messages mid-conversation send each one in place; other providers
- * rebuild the leading system message from the replayed state.
+ * prompt sections. A system message may carry the complete tool list in `tools`, which
+ * replaces any earlier list. Replaying every system message in order yields the current
+ * prompt and tools. Providers that accept system messages mid-conversation send each one
+ * in place (text and sections only); other providers rebuild the leading system message
+ * from the replayed state.
  */
 export interface SystemMessage {
 	role: "system";
@@ -532,10 +533,8 @@ export interface SystemMessage {
 	 * the original. Avoid integer-like names; JSON objects reorder those.
 	 */
 	sections?: Record<string, string | null>;
-	/** Complete definitions of tools that become available at this point. */
-	toolsAdded?: Tool[];
-	/** Tools that stop being available at this point. */
-	toolsRemoved?: ToolReference[];
+	/** The complete tool list from this point on. Replaces any earlier list. Omit to keep the current list. */
+	tools?: Tool[];
 	timestamp: number; // Unix timestamp in milliseconds
 }
 
@@ -721,10 +720,6 @@ export interface Tool<TParameters extends TSchema = TSchema> {
 	constrainedSampling?: false | ConstrainedSamplingConfig;
 }
 
-export interface ToolReference {
-	name: string;
-}
-
 /**
  * Request input accepted by the public stream entry points (`Models.stream()`,
  * `streamSimple()`, ...). `systemPrompt` and `tools` are shorthand for a leading
@@ -846,8 +841,6 @@ export interface OpenAICompletionsCompat {
 	supportsOpenAIGrammarTools?: boolean;
 	/** Whether the exact model accepts system or developer messages after the conversation has started. When false, later system messages are folded into the leading system message. Default: false; the generated model catalog enables it for verified models. */
 	supportsMidConvoSystemMessages?: boolean;
-	/** Whether system messages can introduce additional tools mid-conversation. Requires `supportsMidConvoSystemMessages`. Default: false; the generated model catalog enables it for capable models. */
-	supportsMidConvoToolAdditions?: boolean;
 	/** Whether the provider supports the `strict` field in tool definitions. Default: false; generated capable models enable it explicitly. */
 	supportsStrictMode?: boolean;
 	/** Cache control convention for prompt caching. "anthropic" applies Anthropic-style `cache_control` markers to the system prompt, last tool definition, and last user, assistant, or tool-result text content. */
@@ -881,10 +874,6 @@ export interface OpenAIResponsesCompat {
 	supportsStrictMode?: boolean;
 	/** Whether to emit OpenAI custom tools with Lark/regex grammar formats. When false, grammar-constrained tools fall back to normal function tools. Default: false; the generated model catalog enables it for capable models. */
 	supportsOpenAIGrammarTools?: boolean;
-	/** Whether the model supports message-anchored `additional_tools` input items. Default: false. */
-	supportsAdditionalTools?: boolean;
-	/** Whether the model supports client-executed tool search for transcript-anchored additions. Default: false. */
-	supportsToolSearch?: boolean;
 	/** Whether the model accepts `prompt_cache_options` (OpenAI GPT-5.6+ prompt caching). Older OpenAI models reject the parameter. Default: false. */
 	supportsExplicitPromptCacheMode?: boolean;
 	/** Whether the provider accepts the `max_output_tokens` parameter. Some Codex-protocol gateways reject it. Default: true. */
@@ -945,8 +934,6 @@ export interface AnthropicMessagesCompat {
 	supportsMidConvoEffort?: boolean;
 	/** Whether the exact model accepts system-role messages inside the conversation. When false, later system messages are folded into the top-level system prompt. Default: false. */
 	supportsMidConvoSystemMessages?: boolean;
-	/** Whether the exact model accepts mid-conversation `tool_addition` and `tool_removal` blocks. Requires `supportsMidConvoSystemMessages`. Default: false. */
-	supportsMidConvoToolChanges?: boolean;
 	/**
 	 * Models Anthropic accepts in `fallbacks` for server-side refusal fallback,
 	 * with local pricing metadata for returned fallback responses. When absent or

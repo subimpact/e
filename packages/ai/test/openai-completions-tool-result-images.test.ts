@@ -36,7 +36,6 @@ const compat: Omit<Required<OpenAICompletionsCompat>, "thinkingTokenBudgetField"
 	supportsStrictMode: true,
 	supportsOpenAIGrammarTools: false,
 	supportsMidConvoSystemMessages: false,
-	supportsMidConvoToolAdditions: false,
 	cacheControlFormat: "anthropic",
 	sendSessionAffinityHeaders: false,
 	sessionAffinityFormat: "openai",

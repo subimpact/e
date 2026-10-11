@@ -19,6 +19,7 @@ import { readPiManifest } from "../pi-manifest.ts";
 import { createSyntheticSourceInfo, getSyntheticPathSource, isSyntheticPath } from "../source-info.ts";
 import { time } from "../timings.ts";
 import type { ModelRouteRequest, VirtualModelDefinition } from "../virtual-models.ts";
+import { formatCompatFindings, sanitizeToolDefinition, scanToolDefinition } from "./compat-check.ts";
 import type {
 	EntryRenderer,
 	Extension,
@@ -665,6 +666,10 @@ async function loadExtensionsInternal(
 		}
 
 		if (extension) {
+			const compatFindings = applyToolCompatSanitization(extension);
+			if (compatFindings.length > 0) {
+				warnings.push({ path: extPath, warning: formatCompatFindings(compatFindings) });
+			}
 			extensions.push(extension);
 		}
 	}
@@ -684,6 +689,22 @@ export async function loadExtensions(
 	runtime?: ExtensionRuntime,
 ): Promise<LoadExtensionsResult> {
 	return loadExtensionsInternal(paths, cwd, eventBus, runtime);
+}
+
+/**
+ * Strip unsupported surfaces from a loaded extension's registered tool definitions so they
+ * register as ordinary tools (exposure ignored, loadout hooks never called). Returns the
+ * de-duplicated feature labels for the compat warning.
+ */
+function applyToolCompatSanitization(extension: Extension): string[] {
+	const labels = new Set<string>();
+	for (const registered of extension.tools.values()) {
+		const found = scanToolDefinition(registered.definition);
+		if (found.length === 0) continue;
+		for (const label of found) labels.add(label);
+		sanitizeToolDefinition(registered.definition);
+	}
+	return [...labels];
 }
 
 export async function loadExtensionsCached(
