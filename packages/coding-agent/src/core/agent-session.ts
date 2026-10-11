@@ -107,7 +107,6 @@ import {
 	type ToolExecutionUpdateEvent,
 	type ToolExposure,
 	type ToolInfo,
-	type ToolLoadout,
 	type TreePreparation,
 	type TurnStartEvent,
 	wrapRegisteredTools,
@@ -1522,42 +1521,8 @@ export class AgentSession {
 			const tool = this._toolRegistry.get(name);
 			return tool && this._getToolExposure(name) !== "hidden" ? [tool] : [];
 		});
-		const hooks = tools.flatMap((tool) => {
-			const entry = this._toolDefinitions.get(tool.name);
-			return entry?.definition.prepareLoadout ? [entry] : [];
-		});
 		const hidden = new Set<string>();
-		let declared = tools;
-		if (hooks.length > 0) {
-			const loadout: ToolLoadout = {
-				declared: tools,
-				callable: this._getCallableTools(new Set(tools.map((tool) => tool.name))),
-				registered: [...this._toolRegistry.values()],
-				getExposure: (name) => this._getToolExposure(name),
-				getNamespace: (name) => this._toolDefinitions.get(name)?.definition.namespace,
-			};
-			const descriptions = new Map<string, string>();
-			for (const { definition, sourceInfo } of hooks) {
-				try {
-					const changes = definition.prepareLoadout?.(loadout);
-					for (const [name, description] of Object.entries(changes?.descriptions ?? {})) {
-						descriptions.set(name, description);
-					}
-					for (const name of changes?.hiddenDeclarations ?? []) hidden.add(name);
-				} catch (error) {
-					this._extensionRunner.emitError({
-						extensionPath: sourceInfo.path,
-						event: "prepare_loadout",
-						error: error instanceof Error ? error.message : String(error),
-						stack: error instanceof Error ? error.stack : undefined,
-					});
-				}
-			}
-			declared = tools.map((tool) => {
-				const description = descriptions.get(tool.name);
-				return description === undefined ? tool : { ...tool, description };
-			});
-		}
+		const declared = tools;
 		this._hiddenDeclarations = hidden;
 		this.agent.state.tools = declared;
 		return declared;
