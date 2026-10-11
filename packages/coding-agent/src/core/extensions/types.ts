@@ -493,18 +493,6 @@ export interface ToolRenderContext<TState = any, TArgs = any> {
 }
 
 /**
- * How the model reaches a tool.
- *
- * - `direct`: declared to the model while active, and callable while active.
- * - `model-only`: declared to the model while active, never callable. Use it for orchestrating or
- *   interactive tools.
- * - `hidden`: registered but unreachable. Activating it has no effect.
- *
- * `direct` and `model-only` tools are activated when they are registered; the others are not.
- */
-export type ToolExposure = "direct" | "model-only" | "hidden";
-
-/**
  * Hints about what a tool does. They come from the tool's author and are not verified; permission
  * extensions can use them to decide which calls to confirm.
  */
@@ -561,22 +549,14 @@ export interface ToolDefinition<TParams extends TSchema = TSchema, TDetails = un
 	 */
 	outputSchema?: TSchema;
 
-	/**
-	 * How the model reaches the tool. Default: `"direct"`. See {@link ToolExposure}.
-	 */
-	exposure?: ToolExposure;
-
 	/** Group the tool belongs to, such as a server or plugin. */
 	namespace?: ToolNamespace;
 
 	/** Hints about what the tool does, such as from a server that hosts the tool. */
 	annotations?: ToolAnnotations;
 
-	/**
-	 * Whether registering the tool activates it. Default: `true` for `direct` and `model-only` tools;
-	 * other exposures are never activated on registration. A tool with `defaultActive: false` is
-	 * activated by naming it in `--tools` or the `defaultTools` setting, or with `setActiveTools()`.
-	 */
+	/** Whether registering the tool activates it. Default: `true`. A tool with `defaultActive: false` is
+	 * activated by naming it in `--tools` or the `defaultTools` setting, or with `setActiveTools()`. */
 	defaultActive?: boolean;
 
 	/**
@@ -1661,7 +1641,7 @@ export interface ExtensionAPI {
 	/** Get the names of the active tools, which are the tools declared to the model. */
 	getActiveTools(): string[];
 
-	/** Get all configured tools with parameter schema, prompt guidelines, exposure, and source metadata. */
+	/** Get all configured tools with parameter schema, prompt guidelines, and source metadata. */
 	getAllTools(): ToolInfo[];
 
 	/** Get a copy of the effective settings (global and project settings merged, with overrides). */
@@ -1986,7 +1966,6 @@ export type GetActiveToolsHandler = () => string[];
 
 /** Tool info with name, description, parameter schema, prompt guidelines, and source metadata. */
 export type ToolInfo = Pick<ToolDefinition, "name" | "description" | "parameters" | "promptGuidelines"> & {
-	exposure: ToolExposure;
 	namespace?: ToolNamespace;
 	annotations?: ToolAnnotations;
 	sourceInfo: SourceInfo;

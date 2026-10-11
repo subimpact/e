@@ -105,7 +105,6 @@ import {
 	type ToolExecutionEndEvent,
 	type ToolExecutionStartEvent,
 	type ToolExecutionUpdateEvent,
-	type ToolExposure,
 	type ToolInfo,
 	type TreePreparation,
 	type TurnStartEvent,
@@ -422,12 +421,6 @@ export class AgentSession {
 	private _cwd: string;
 	private _extensionRunnerRef?: { current?: ExtensionRunner };
 	private _initialActiveToolNames?: string[];
-	/**
-	 * Tools of the restored or reloaded loadout that are not registered yet. They are activated when
-	 * they are registered, and dropped when `setActiveToolsByName()` deactivates a tool or the next
-	 * agent run starts.
-	 */
-	private _pendingToolNames = new Set<string>();
 	private _usesDefaultTools: boolean;
 	private _allowedToolNames?: Set<string>;
 	private _excludedToolNames?: Set<string>;
@@ -448,8 +441,6 @@ export class AgentSession {
 	private _toolRegistry: Map<string, AgentTool> = new Map();
 	/** Created on the first `ctx.executeTool()` call. */
 	private _nestedToolCalls: NestedToolCallRunner | undefined;
-	/** Declared tools whose declarations requests leave out, from `prepareLoadout` hooks. */
-	private _hiddenDeclarations: ReadonlySet<string> = new Set();
 	private _toolDefinitions: Map<string, ToolDefinitionEntry> = new Map();
 	private _toolPromptSnippets: Map<string, string> = new Map();
 	private _toolPromptGuidelines: Map<string, string[]> = new Map();
@@ -486,14 +477,13 @@ export class AgentSession {
 		this._installAgentNextTurnRefresh();
 		this._installAgentRequestProjection();
 		this._installAgentBoundaryHooks();
-		this._installHiddenDeclarationsProjection();
 		this._installAgentForcedPromptProjection();
 
 		this._buildRuntime({
 			activeToolNames: this._initialActiveToolNames,
 			includeAllExtensionTools: true,
 		});
-		if (this._initialActiveToolNames === undefined) this._restoreToolsFromTranscript();
+		if (this._initialActiveToolNames === undefined) this._restoreActiveTools();
 	}
 
 	get modelRuntime(): ModelRuntime {
@@ -883,7 +873,7 @@ export class AgentSession {
 				toolSnippets: { ...this._baseSystemPromptOptions.toolSnippets, ...runOptions.toolSnippets },
 				toolGuidelines: { ...this._baseSystemPromptOptions.toolGuidelines, ...runOptions.toolGuidelines },
 			});
-			const updateMessage = this._preparePromptAndToolLoadout(options, nextContext.messages);
+			const updateMessage = this._preparePromptUpdate(options, nextContext.messages);
 			// Keep session.systemPrompt and ctx.getSystemPrompt() in step with what the provider sees.
 			this._runSystemPromptOptions = options;
 
@@ -1464,7 +1454,6 @@ export class AgentSession {
 			description: definition.description,
 			parameters: definition.parameters,
 			promptGuidelines: definition.promptGuidelines,
-			exposure: this._getToolExposure(definition.name),
 			...(definition.namespace ? { namespace: definition.namespace } : {}),
 			...(definition.annotations ? { annotations: { ...definition.annotations } } : {}),
 			sourceInfo,
@@ -1482,16 +1471,16 @@ export class AgentSession {
 	 * Changes take effect on the next agent turn.
 	 */
 	setActiveToolsByName(toolNames: string[]): void {
-		const previous = this.getActiveToolNames();
 		this._setActiveTools(toolNames);
-		// A loadout that deactivates a tool replaces the restored one, whose pending tools are dropped.
-		const active = new Set(this.getActiveToolNames());
-		if (previous.some((name) => !active.has(name))) this._pendingToolNames.clear();
 	}
 
 	private _setActiveTools(toolNames: string[]): void {
-		const tools = this._applyToolLoadout(toolNames);
-		for (const tool of tools) this._pendingToolNames.delete(tool.name);
+		const tools: AgentTool[] = [];
+		for (const name of [...new Set(toolNames)]) {
+			const tool = this._toolRegistry.get(name);
+			if (tool) tools.push(tool);
+		}
+		this.agent.state.tools = tools;
 		this._rebuildSystemPrompt(tools.map((tool) => tool.name));
 	}
 
@@ -1499,34 +1488,15 @@ export class AgentSession {
 		return (!this._allowedToolNames || this._allowedToolNames.has(name)) && !this._excludedToolNames?.has(name);
 	}
 
-	private _getToolExposure(name: string): ToolExposure {
-		return this._toolDefinitions.get(name)?.definition.exposure ?? "direct";
-	}
-
-	/** Tools callable through `ctx.executeTool()`: the active `direct` tools. */
+	/** Tools callable through `ctx.executeTool()`: the active registered tools. */
 	private _getCallableTools(active: ReadonlySet<string> = new Set(this.getActiveToolNames())): AgentTool[] {
-		return [...this._toolRegistry.values()].filter(
-			(tool) => this._getToolExposure(tool.name) === "direct" && active.has(tool.name),
-		);
+		return [...this._toolRegistry.values()].filter((tool) => active.has(tool.name));
 	}
 
 	/**
-	 * Set the agent's tools for the given active tool names and return them. The active tools are
-	 * the registered, non-hidden ones; they are declared to the model. Active tools with a
-	 * `prepareLoadout` hook can change the declared descriptions and hide declarations from
-	 * requests (see {@link _installHiddenDeclarationsProjection}).
+	 * Set the agent's tools for the given active tool names. The active tools are the registered
+	 * ones; they are the tools the model sees, full list, every request.
 	 */
-	private _applyToolLoadout(toolNames: string[]): AgentTool[] {
-		const tools = [...new Set(toolNames)].flatMap((name) => {
-			const tool = this._toolRegistry.get(name);
-			return tool && this._getToolExposure(name) !== "hidden" ? [tool] : [];
-		});
-		const hidden = new Set<string>();
-		const declared = tools;
-		this._hiddenDeclarations = hidden;
-		this.agent.state.tools = declared;
-		return declared;
-	}
 
 	/** Whether compaction or branch summarization is currently running */
 	get isCompacting(): boolean {
@@ -1611,8 +1581,7 @@ export class AgentSession {
 		const toolSnippets: Record<string, string> = {};
 		for (const name of this._toolRegistry.keys()) {
 			const snippet = this._toolPromptSnippets.get(name);
-			// Tools without a snippet are not listed. Hidden tools are only callable through another tool.
-			if (snippet && !this._hiddenDeclarations.has(name)) toolSnippets[name] = snippet;
+			if (snippet) toolSnippets[name] = snippet;
 		}
 
 		const loaderSystemPrompt = this._resourceLoader.getSystemPrompt();
@@ -1634,24 +1603,20 @@ export class AgentSession {
 	}
 
 	/**
-	 * Apply a prompt and tool loadout for the next request. Sets the executable tools and
-	 * returns a system message patching the prompt sections the model currently has (replayed
-	 * from `messages`), or undefined when the prompt is unchanged. Tool changes are declared by
-	 * the agent loop before the request.
+	 * Set the executable tools for the next request and returns a system message patching the
+	 * prompt sections the model currently has (replayed from `messages`), or undefined when the
+	 * prompt is unchanged. Tool changes are declared by the agent loop before the request.
 	 *
 	 * A forced prompt does not affect the transcript: the structured sections are still diffed
 	 * and persisted, and the forced text is projected onto the request by
 	 * {@link _installAgentForcedPromptProjection}.
 	 */
-	private _preparePromptAndToolLoadout(
+	private _preparePromptUpdate(
 		options: NormalizedBuildSystemPromptOptions,
 		messages: AgentMessage[] = this.agent.state.messages,
 	): SystemMessage | undefined {
-		options.selectedTools = this._applyToolLoadout(options.selectedTools).map((tool) => tool.name);
-		// The tool list must match the declarations the request carries, so hidden tools are not listed.
-		options.toolSnippets = Object.fromEntries(
-			Object.entries(options.toolSnippets).filter(([name]) => !this._hiddenDeclarations.has(name)),
-		);
+		this._setActiveTools(options.selectedTools);
+		options.selectedTools = this.agent.state.tools.map((tool) => tool.name);
 		const sections = diffSystemPromptSections(
 			getCurrentSystemMessage(messages)?.sections ?? {},
 			buildSystemPromptSections(options),
@@ -1666,34 +1631,8 @@ export class AgentSession {
 	 * head of the request; a mid-conversation system message would leave the original prompt
 	 * in place. The forced text is a rendering of the current prompt, so the transcript keeps
 	 * its structured sections and the request is projected instead: the system messages
-	 * collapse into one head holding the forced text and the current tools. Runs after the
-	 * `context` extension handlers.
+	 * collapse into one head holding the forced text. Runs after the `context` extension handlers.
 	 */
-	/**
-	 * Remove the declarations that `prepareLoadout` hooks hide from every request. The whole
-	 * transcript is filtered with the current set, so the projected declarations stay consistent
-	 * across requests and only change when the loadout does.
-	 */
-	private _installHiddenDeclarationsProjection(): void {
-		const previousTransformContext = this.agent.transformContext;
-		this.agent.transformContext = async (messages, signal) => {
-			const transformed = previousTransformContext ? await previousTransformContext(messages, signal) : messages;
-			const hidden = this._hiddenDeclarations;
-			if (hidden.size === 0) return transformed;
-			return transformed.map((message) => {
-				if (message.role !== "system" || (!message.toolsAdded && !message.toolsRemoved)) return message;
-				const { toolsAdded, toolsRemoved, ...rest } = message;
-				const added = toolsAdded?.filter((tool) => !hidden.has(tool.name)) ?? [];
-				const removed = toolsRemoved?.filter((tool) => !hidden.has(tool.name)) ?? [];
-				return {
-					...rest,
-					...(added.length > 0 ? { toolsAdded: added } : {}),
-					...(removed.length > 0 ? { toolsRemoved: removed } : {}),
-				};
-			});
-		};
-	}
-
 	private _installAgentForcedPromptProjection(): void {
 		const previousTransformContext = this.agent.transformContext;
 		this.agent.transformContext = async (messages, signal) => {
@@ -1704,7 +1643,7 @@ export class AgentSession {
 			const head: SystemMessage = {
 				role: "system",
 				content: forced,
-				...(current?.toolsAdded ? { toolsAdded: current.toolsAdded } : {}),
+				...(current?.tools ? { tools: current.tools } : {}),
 				timestamp: current?.timestamp ?? Date.now(),
 			};
 			return [head, ...transformed.filter((message) => message.role !== "system")];
@@ -1712,17 +1651,15 @@ export class AgentSession {
 	}
 
 	/**
-	 * Restore the active tool loadout declared by the session transcript, if it declares one.
-	 * Tools reachable only from other tools are never declared, but they do not depend on the active
-	 * set, so the transcript's declarations are the whole loadout.
+	 * Restore the active tools declared by the session transcript, if it declares one. Tools that
+	 * register later are activated when they register; the transcript's snapshot only names the
+	 * active set.
 	 */
-	private _restoreToolsFromTranscript(): void {
-		this._pendingToolNames.clear();
+	private _restoreActiveTools(): void {
 		const current = getCurrentSystemMessage(this.sessionManager.buildSessionContext().messages);
 		if (!current) return;
-		const names = (current.toolsAdded ?? []).map((tool) => tool.name);
-		this._pendingToolNames = new Set(names.filter((name) => this._isAllowedTool(name)));
-		this._setActiveTools(names);
+		const names = current.tools?.map((tool) => tool.name) ?? [];
+		this._setActiveTools(names.filter((name) => this._isAllowedTool(name)));
 	}
 
 	// =========================================================================
@@ -1734,9 +1671,6 @@ export class AgentSession {
 		// Compaction before the prompt may have scheduled a retry; the new prompt replaces it.
 		this._failedResponse = undefined;
 		this._recordSelection();
-		// The run records the loadout in the transcript; restored tools that did not register by now
-		// are dropped, so a tool that never registers does not stay pending.
-		this._pendingToolNames.clear();
 		this._isAgentRunActive = true;
 		try {
 			await this.agent.prompt(messages);
@@ -2012,7 +1946,7 @@ export class AgentSession {
 				timestamp: Date.now(),
 			});
 		}
-		const updateMessage = this._preparePromptAndToolLoadout(result.systemPromptOptions);
+		const updateMessage = this._preparePromptUpdate(result.systemPromptOptions);
 		this._runSystemPromptOptions = result.systemPromptOptions;
 		if (updateMessage) messages.unshift(updateMessage);
 
@@ -3402,8 +3336,8 @@ export class AgentSession {
 	}
 
 	private _refreshToolRegistry(options?: { activeToolNames?: string[]; includeAllExtensionTools?: boolean }): void {
-		// Tools that were already activated on registration. A tool whose exposure changes to
-		// `direct` or `model-only` (for example from `hidden`) is activated like a new tool.
+		// Tools that were already activated on registration. A tool whose defaultActive changes to
+		// active (for example from false) is activated like a new tool.
 		const previousActivatedOnRegistration = new Set(
 			[...this._toolRegistry.keys()].filter((name) => this._isActivatedOnRegistration(name)),
 		);
@@ -3479,9 +3413,7 @@ export class AgentSession {
 		if (allowedToolNames) {
 			for (const toolName of this._toolRegistry.keys()) {
 				// Naming a tool activates it even when it is not active by default.
-				if (allowedToolNames.has(toolName) && this._isDeclarable(toolName)) {
-					nextActiveToolNames.push(toolName);
-				}
+				if (allowedToolNames.has(toolName)) nextActiveToolNames.push(toolName);
 			}
 		} else if (options?.includeAllExtensionTools) {
 			for (const tool of wrappedExtensionTools) {
@@ -3494,21 +3426,13 @@ export class AgentSession {
 				}
 			}
 		}
-		// Pending tools that are registered now become active.
-		nextActiveToolNames.push(...this._pendingToolNames);
 
 		this._setActiveTools([...new Set(nextActiveToolNames)]);
 	}
 
-	/** Whether activating the tool declares it to the model. */
-	private _isDeclarable(name: string): boolean {
-		const exposure = this._getToolExposure(name);
-		return exposure === "direct" || exposure === "model-only";
-	}
-
-	/** Whether registering the tool activates it, which declares it to the model. */
+	/** Whether registering the tool activates it. */
 	private _isActivatedOnRegistration(name: string): boolean {
-		return this._isDeclarable(name) && this._toolDefinitions.get(name)?.definition.defaultActive !== false;
+		return this._toolDefinitions.get(name)?.definition.defaultActive !== false;
 	}
 
 	private _buildRuntime(options: {
@@ -3584,10 +3508,9 @@ export class AgentSession {
 					(name) => !previousDefaultTools.has(name),
 				)
 			: [];
-		// Tools the new extensions register later are pending until then.
-		for (const name of this.getActiveToolNames()) this._pendingToolNames.add(name);
+		const activeToolNames = [...this.getActiveToolNames(), ...addedDefaultTools];
 		this._buildRuntime({
-			activeToolNames: [...this.getActiveToolNames(), ...addedDefaultTools],
+			activeToolNames,
 			flagValues: previousFlagValues,
 			includeAllExtensionTools: true,
 		});
@@ -4041,7 +3964,7 @@ export class AgentSession {
 
 			// Update finalized context from the canonical session projection.
 			this._refreshFinalizedContext();
-			this._restoreToolsFromTranscript();
+			this._restoreActiveTools();
 
 			// Emit session_tree event
 			await this._extensionRunner.emit({

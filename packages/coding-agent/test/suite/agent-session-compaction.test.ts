@@ -194,11 +194,12 @@ describe("AgentSession compaction characterization", () => {
 		const declared = harness.session.messages[0];
 		if (declared?.role !== "system") throw new Error("expected declared system message");
 
+		const withoutBash = (declared.tools ?? []).filter((tool) => tool.name !== "bash");
 		harness.sessionManager.appendMessage({
 			role: "system",
 			content: "summarized instruction",
 			sections: { early: "<early>1</early>" },
-			toolsRemoved: [{ name: "bash" }],
+			tools: withoutBash,
 			timestamp: Date.now(),
 		});
 		const firstKeptEntryId = harness.sessionManager.appendMessage({
@@ -210,7 +211,7 @@ describe("AgentSession compaction characterization", () => {
 			role: "system",
 			content: "retained instruction",
 			sections: { extra: "<extra>late</extra>" },
-			toolsRemoved: [{ name: "read" }],
+			tools: withoutBash.filter((tool) => tool.name !== "read"),
 			timestamp: Date.now(),
 		});
 		harness.sessionManager.appendMessage({
@@ -230,7 +231,7 @@ describe("AgentSession compaction characterization", () => {
 			early: "<early>1</early>",
 			extra: "<extra>late</extra>",
 		});
-		expect(checkpoint.toolsAdded?.map((tool) => tool.name)).toEqual(
+		expect(checkpoint.tools?.map((tool) => tool.name)).toEqual(
 			harness.session.getActiveToolNames().filter((name) => name !== "read" && name !== "bash"),
 		);
 	});

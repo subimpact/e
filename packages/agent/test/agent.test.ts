@@ -172,10 +172,10 @@ describe("Agent", () => {
 		expect(initial?.role).toBe("system");
 		if (initial?.role !== "system") throw new Error("expected initial system message");
 		expect(initial.content).toBe("You are helpful.");
-		expect(initial.toolsAdded?.map((value) => value.name)).toEqual(["echo"]);
+		expect(initial.tools?.map((value) => value.name)).toEqual(["echo"]);
 	});
 
-	it("declares tool loadout changes to the model before the next request", async () => {
+	it("declares the tool snapshot to the model before the next request", async () => {
 		const first = createTool("first");
 		const second = createTool("second");
 		const requests: string[][] = [];
@@ -184,12 +184,7 @@ describe("Agent", () => {
 			streamFn: (_model, context) => {
 				requests.push(
 					context.messages.flatMap((message) =>
-						message.role === "system"
-							? [
-									`+${(message.toolsAdded ?? []).map((tool) => tool.name).join(",")}`,
-									`-${(message.toolsRemoved ?? []).map((tool) => tool.name).join(",")}`,
-								]
-							: [],
+						message.role === "system" ? [(message.tools ?? []).map((tool) => tool.name).join(",")] : [],
 					),
 				);
 				const stream = new MockAssistantStream();
@@ -205,22 +200,19 @@ describe("Agent", () => {
 		await agent.prompt("two");
 		await agent.prompt("three");
 
-		expect(requests).toEqual([
-			["+first", "-"],
-			["+first", "-", "+second", "-first"],
-			["+first", "-", "+second", "-first"],
-		]);
-		const update = agent.state.messages.find((message) => message.role === "system" && message.toolsRemoved);
+		expect(requests).toEqual([["first"], ["first", "second"], ["first", "second"]]);
+		const update = agent.state.messages.find(
+			(message, index) => index > 0 && message.role === "system" && message.tools,
+		);
 		expect(update).toEqual({
 			role: "system",
 			content: "",
-			toolsAdded: [{ name: "second", description: "second tool", parameters: Type.Object({}) }],
-			toolsRemoved: [{ name: "first" }],
+			tools: [{ name: "second", description: "second tool", parameters: Type.Object({}) }],
 			timestamp: expect.any(Number),
 		});
 		const initial = agent.state.messages[0];
 		if (initial?.role !== "system") throw new Error("expected initial system message");
-		expect(initial.toolsAdded?.[0]).not.toHaveProperty("execute");
+		expect(initial.tools?.[0]).not.toHaveProperty("execute");
 	});
 
 	it("merges tool changes into a pending system message", async () => {
@@ -253,7 +245,7 @@ describe("Agent", () => {
 			role: "system",
 			content: "",
 			sections: { skills: "<skills>x</skills>" },
-			toolsAdded: [{ name: "echo", description: "Echo input", parameters: Type.Object({}) }],
+			tools: [{ name: "echo", description: "Echo input", parameters: Type.Object({}) }],
 			timestamp: 1,
 		});
 	});
@@ -277,20 +269,21 @@ describe("Agent", () => {
 				role: "system",
 				content: "",
 				sections: { note: "<note>x</note>" },
-				toolsAdded: [toToolDeclaration(createTool("second"))],
-				toolsRemoved: [{ name: "first" }],
+				tools: [toToolDeclaration(createTool("second"))],
 				timestamp: 1,
 			},
 			{ role: "user", content: "hi", timestamp: 2 },
 		]);
 
+		// The pending message claims a different snapshot than the executable set: the executable set wins.
 		expect(agent.state.messages[1]).toEqual({
 			role: "system",
 			content: "",
 			sections: { note: "<note>x</note>" },
+			tools: [{ name: "first", description: "first tool", parameters: Type.Object({}) }],
 			timestamp: 1,
 		});
-		expect(getCurrentSystemMessage(agent.state.messages)?.toolsAdded?.map((tool) => tool.name)).toEqual(["first"]);
+		expect(getCurrentSystemMessage(agent.state.messages)?.tools?.map((tool) => tool.name)).toEqual(["first"]);
 	});
 
 	it("restores the transcript baseline when reset", () => {
@@ -317,7 +310,7 @@ describe("Agent", () => {
 		expect(initial?.role).toBe("system");
 		if (initial?.role !== "system") throw new Error("expected initial system message");
 		expect(initial.content).toBe("You are helpful.");
-		expect(initial.toolsAdded?.map((value) => value.name)).toEqual(["echo"]);
+		expect(initial.tools?.map((value) => value.name)).toEqual(["echo"]);
 	});
 
 	it("should subscribe to events", () => {

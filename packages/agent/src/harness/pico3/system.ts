@@ -295,21 +295,16 @@ export async function planManagedEntry(
 	const toolOf = (t: AnyToolDeclaration) => ({
 		name: t.name,
 		description: t.description,
-		parameters: structuredClone(t.parameters) as Stored<SystemMessage>["toolsAdded"] extends (infer X)[] | undefined
+		parameters: structuredClone(t.parameters) as Stored<SystemMessage>["tools"] extends (infer X)[] | undefined
 			? X extends { parameters: infer PP }
 				? PP
 				: never
 			: never,
 	});
 
-	// Previous effective tools: those declared by the newest managed entry chain (we recompute from canonical's owner: the tail message).
-	const { messages } = await tx.context(conversationId);
-	const previous = new Map<string, { name: string }>();
-	for (const m of messages)
-		if (m.role === "system") {
-			for (const t of (m as SystemMessage).toolsRemoved ?? []) previous.delete(t.name);
-			for (const t of (m as SystemMessage).toolsAdded ?? []) previous.set(t.name, t);
-		}
+	// Previous effective tools: the tool snapshot declared by the newest managed entry chain
+	// (we recompute from canonical's owner: the tail message).
+	const previous = effectiveTools((await tx.context(conversationId)).messages);
 
 	if (needBaseline) {
 		const sections: SectionRecord[] = [...desired].map(([key, s]) => ({
@@ -326,7 +321,7 @@ export async function planManagedEntry(
 		const message = {
 			role: "system",
 			content,
-			toolsAdded: tools.map(toolOf),
+			tools: tools.map(toolOf),
 			timestamp: now,
 		} as Stored<SystemMessage>;
 		return { data: { baseline: true, sections }, model: [message], ...(edits.length ? { edits } : {}) };
@@ -339,12 +334,12 @@ export async function planManagedEntry(
 			changed.push({ key, action: "set", value: s.value, rendered: s.rendered });
 	}
 	for (const key of canonical.keys()) if (!desired.has(key)) changed.push({ key, action: "remove" });
-	const added = tools.filter((t) => !previous.has(t.name));
-	const removed = [...previous.values()].filter((p) => !tools.some((t) => t.name === p.name));
-	if (changed.length === 0 && added.length === 0 && removed.length === 0) return undefined;
+	const toolDeclarations = tools.map(toolOf);
+	const toolsChanged = !toolsEqual(previous, toolDeclarations);
+	if (changed.length === 0 && !toolsChanged) return undefined;
 
 	const renderChanged = changed.some((s) => s.action === "remove" || canonical.get(s.key)?.rendered !== s.rendered);
-	if (!renderChanged && added.length === 0 && removed.length === 0) return { data: { sections: changed }, model: [] }; // metadata-only delta
+	if (!renderChanged && !toolsChanged) return { data: { sections: changed }, model: [] }; // metadata-only delta
 	const content = changed
 		.map((s) =>
 			s.action === "set"
@@ -355,22 +350,37 @@ export async function planManagedEntry(
 	const message = {
 		role: "system",
 		content,
-		...(added.length ? { toolsAdded: added.map(toolOf) } : {}),
-		...(removed.length ? { toolsRemoved: removed } : {}),
+		...(toolsChanged ? { tools: toolDeclarations } : {}),
 		timestamp: now,
 	} as Stored<SystemMessage>;
 	return { data: { sections: changed }, model: [message] };
 }
 
-/** Tools effective in a projected request: fold toolsAdded/toolsRemoved across its SystemMessages. */
-export function effectiveTools(messages: readonly { role: string }[]): { name: string }[] {
-	const tools = new Map<string, { name: string }>();
-	for (const m of messages)
+/** The complete tool snapshot of a projected request: the last SystemMessage that declares `tools`. */
+export function effectiveTools(messages: readonly { role: string }[]): NonNullable<SystemMessage["tools"]> {
+	for (let i = messages.length - 1; i >= 0; i--) {
+		const m = messages[i];
 		if (m.role === "system") {
-			for (const t of (m as SystemMessage).toolsRemoved ?? []) tools.delete(t.name);
-			for (const t of (m as SystemMessage).toolsAdded ?? []) tools.set(t.name, t);
+			const tools = (m as SystemMessage).tools;
+			if (tools !== undefined) return [...tools];
 		}
-	return [...tools.values()];
+	}
+	return [];
+}
+
+type ToolSnapshot = NonNullable<SystemMessage["tools"]>;
+
+/** Whether two tool snapshots declare the same set. */
+function toolsEqual(left: ToolSnapshot, right: ToolSnapshot): boolean {
+	if (left.length !== right.length) return false;
+	const rightByName = new Map(right.map((t) => [t.name, t]));
+	for (const tool of left) {
+		const other = rightByName.get(tool.name);
+		if (other === undefined) return false;
+		if (other.description !== tool.description) return false;
+		if (JSON.stringify(other.parameters) !== JSON.stringify(tool.parameters)) return false;
+	}
+	return true;
 }
 
 export type { RewindableState, Runtime };

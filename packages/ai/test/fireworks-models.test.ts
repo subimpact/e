@@ -75,7 +75,6 @@ describe("Fireworks models", () => {
 			requiresReasoningContentOnAssistantMessages: true,
 			thinkingFormat: "openai",
 			supportsMidConvoSystemMessages: true,
-			supportsMidConvoToolAdditions: true,
 			sendSessionAffinityHeaders: true,
 			supportsLongCacheRetention: false,
 		};

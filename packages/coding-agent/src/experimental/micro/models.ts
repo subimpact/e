@@ -58,17 +58,18 @@ function toAiContext(request: RequestOptions, toolMetadata: ReadonlyMap<string, 
 		}
 		const system = message as SystemMessage;
 		if (system.content) systemPrompt.push(system.content);
-		for (const removed of system.toolsRemoved ?? []) tools.delete(removed.name);
-		for (const added of system.toolsAdded ?? []) {
-			const metadata = toolMetadata.get(added.name);
-			tools.set(added.name, {
-				name: added.name,
-				description: added.description,
-				parameters: added.parameters as TSchema,
-				...(metadata?.constrainedSampling === undefined
-					? {}
-					: { constrainedSampling: metadata.constrainedSampling }),
-			});
+		if (system.tools) {
+			for (const tool of system.tools) {
+				const metadata = toolMetadata.get(tool.name);
+				tools.set(tool.name, {
+					name: tool.name,
+					description: tool.description,
+					parameters: tool.parameters as TSchema,
+					...(metadata?.constrainedSampling === undefined
+						? {}
+						: { constrainedSampling: metadata.constrainedSampling }),
+				});
+			}
 		}
 	}
 	return {

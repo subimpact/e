@@ -172,8 +172,8 @@ describe("context_with_system handlers", () => {
 						seen.push(event.messages);
 						return {
 							messages: event.messages.map((message) =>
-								message.role === "system" && message.toolsAdded
-									? { ...message, toolsAdded: message.toolsAdded.filter((tool) => tool.name !== "bash") }
+								message.role === "system" && message.tools
+									? { ...message, tools: message.tools.filter((tool) => tool.name !== "bash") }
 									: message,
 							),
 						};

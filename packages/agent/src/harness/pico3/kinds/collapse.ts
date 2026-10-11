@@ -185,7 +185,7 @@ async function summarizeNow(
 	const request: RequestMessage[] = [
 		...messages,
 		...(tools.length > 0
-			? [toStored({ role: "system", content: "", toolsRemoved: tools, timestamp: runtime.now() } as SystemMessage)]
+			? [toStored({ role: "system", content: "", tools: [], timestamp: runtime.now() } as SystemMessage)]
 			: []),
 		{
 			role: "user",

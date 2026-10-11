@@ -218,46 +218,44 @@ describe("builtin providers", () => {
 		}
 	});
 
-	it("routes proxied tool changes through verified transports only", () => {
+	it("routes mid-conversation system messages through verified transports only", () => {
 		const models = builtinModels();
 		for (const [provider, modelId] of [
 			["opencode", "gpt-5.6-terra"],
 			["github-copilot", "gpt-5.6-terra"],
 		] as const) {
-			// Proxies pass `additional_tools` through to OpenAI but are not verified for tool search.
+			// Proxies pass mid-conversation system messages through to OpenAI; the tool list stays top-level.
 			expect(models.getModel(provider, modelId)?.compat, `${provider}/${modelId}`).toMatchObject({
-				supportsAdditionalTools: true,
+				supportsMidConvoSystemMessages: true,
 			});
-			expect(models.getModel(provider, modelId)?.compat, `${provider}/${modelId}`).not.toHaveProperty(
-				"supportsToolSearch",
-			);
 		}
-		// Proxied Anthropic endpoints reject `tool_addition`/`tool_removal` blocks.
 		for (const provider of ["opencode", "github-copilot"] as const) {
-			expect(models.getModel(provider, "claude-opus-5")?.compat, provider).not.toHaveProperty(
-				"supportsMidConvoToolChanges",
-			);
+			expect(models.getModel(provider, "claude-opus-5")?.compat, provider).toMatchObject({
+				supportsMidConvoSystemMessages: true,
+			});
 		}
 		expect(models.getModel("anthropic", "claude-opus-5")?.compat).toMatchObject({
-			supportsMidConvoToolChanges: true,
+			supportsMidConvoSystemMessages: true,
 		});
 		// Kimi-style tool-bearing system messages survive Moonshot and OpenCode but not Copilot.
 		for (const provider of ["moonshotai", "moonshotai-cn", "opencode", "opencode-go"] as const) {
 			expect(models.getModel(provider, "kimi-k3")?.compat, provider).toMatchObject({
-				supportsMidConvoToolAdditions: true,
+				supportsMidConvoSystemMessages: true,
 			});
 		}
 		for (const provider of ["moonshotai", "moonshotai-cn"] as const) {
 			for (const modelId of ["kimi-k2.6", "kimi-k2.7-code", "kimi-k2.7-code-highspeed"] as const) {
-				expect(models.getModel(provider, modelId)?.compat, `${provider}/${modelId}`).not.toHaveProperty(
-					"supportsMidConvoToolAdditions",
-				);
+				expect(models.getModel(provider, modelId)?.compat, `${provider}/${modelId}`).toMatchObject({
+					supportsMidConvoSystemMessages: true,
+				});
 			}
 		}
-		expect(models.getModel("github-copilot", "kimi-k3")?.compat).not.toHaveProperty("supportsMidConvoToolAdditions");
-		expect(models.getModel("openrouter", "openai/gpt-5.6-terra")?.compat).not.toHaveProperty(
-			"supportsMidConvoToolAdditions",
-		);
+		expect(models.getModel("github-copilot", "kimi-k3")?.compat).toMatchObject({
+			supportsMidConvoSystemMessages: true,
+		});
+		expect(models.getModel("openrouter", "openai/gpt-5.6-terra")?.compat).toMatchObject({
+			supportsMidConvoSystemMessages: true,
+		});
 	});
 
 	it("uses official Kimi K3 pricing for Moonshot providers", () => {

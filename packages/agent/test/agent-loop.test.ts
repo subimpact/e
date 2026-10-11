@@ -175,7 +175,6 @@ describe("agentLoop with AgentMessage", () => {
 		const initialSystem: AgentMessage = {
 			role: "system",
 			content: "Transcript prompt",
-			toolsAdded: [],
 			timestamp: 1,
 		};
 		const context: AgentContext = {

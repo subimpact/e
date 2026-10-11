@@ -46,7 +46,7 @@ describe("system prompt updates", () => {
 			if (head?.role !== "system") throw new Error("expected system message");
 			expect(head.content).toBe("");
 			expect(Object.keys(head.sections ?? {})).toEqual(["preamble", "tools", "rules", "docs", "cwd"]);
-			expect(head.toolsAdded?.map((tool) => tool.name)).toEqual(["read", "bash", "edit", "write"]);
+			expect(head.tools?.map((tool) => tool.name)).toEqual(["read", "bash", "edit", "write"]);
 			expect(getSystemMessageText(head)).toBe(harness.session.systemPrompt);
 		} finally {
 			harness.cleanup();
@@ -138,7 +138,7 @@ describe("system prompt updates", () => {
 			expect(forced).toEqual({
 				role: "system",
 				content: "Exact prompt.",
-				toolsAdded: systemMessages[0]?.[0]?.toolsAdded,
+				tools: systemMessages[0]?.[0]?.tools,
 				timestamp: systemMessages[0]?.[0]?.timestamp,
 			});
 			expect(systemMessages[2]?.at(-1)).toEqual(forced);
@@ -207,7 +207,7 @@ describe("system prompt updates", () => {
 			expect(Object.keys(requests[0] ?? {})).toEqual(["messages"]);
 			const initial = requests[0]?.messages[0];
 			if (initial?.role !== "system") throw new Error("expected initial system message");
-			expect(initial.toolsAdded?.map((value) => value.name)).toEqual(["first", "second"]);
+			expect(initial.tools?.map((value) => value.name)).toEqual(["first", "second"]);
 			expect(initial.sections?.tools).toContain("first prompt snippet");
 
 			const update = requests[1]?.messages.filter((message) => message.role === "system").at(-1);
@@ -215,7 +215,7 @@ describe("system prompt updates", () => {
 				role: "system",
 				content: "",
 				sections: { tools: expect.stringContaining("second prompt snippet"), rules: expect.any(String) },
-				toolsRemoved: [{ name: "first" }],
+				tools: [{ name: "second", description: "second description", parameters: Type.Object({}) }],
 				timestamp: expect.any(Number),
 			});
 			expect(update?.sections?.tools).not.toContain("first prompt snippet");
@@ -225,7 +225,7 @@ describe("system prompt updates", () => {
 			expect(result).toMatchObject({ role: "toolResult", toolName: "first", isError: true });
 
 			const current = getCurrentSystemMessage(harness.session.messages);
-			expect(current?.toolsAdded?.map((value) => value.name)).toEqual(["second"]);
+			expect(current?.tools?.map((value) => value.name)).toEqual(["second"]);
 			expect(getSystemMessageText(current!)).toBe(harness.session.systemPrompt);
 		} finally {
 			harness.cleanup();
@@ -265,8 +265,8 @@ describe("system prompt updates", () => {
 			await harness.session.prompt("second");
 			expect(requests).toHaveLength(2);
 			const update = requests[1]?.messages.filter((message) => message.role === "system").at(-1);
-			expect(update?.toolsRemoved).toEqual([{ name: "first" }]);
-			expect(update?.toolsAdded).toBeUndefined();
+			expect(update?.tools?.map((tool) => tool.name)).toEqual(["second"]);
+			expect(update?.content).toBe("");
 			expect(harness.session.getActiveToolNames()).toEqual(["second"]);
 		} finally {
 			harness.cleanup();
@@ -287,7 +287,7 @@ describe("system prompt updates", () => {
 			await harness.session.prompt("one");
 			const head = harness.session.messages[0];
 			if (head?.role !== "system") throw new Error("expected system message");
-			const declaration = head.toolsAdded?.[0];
+			const declaration = head.tools?.[0];
 			if (!declaration) throw new Error("expected tool declaration");
 			expect(Object.hasOwn(declaration, "constrainedSampling")).toBe(false);
 			expect(Object.hasOwn(declaration, "execute")).toBe(false);

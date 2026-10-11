@@ -209,7 +209,6 @@ function getAnthropicCompat(model: Model<"anthropic-messages">) {
 		allowEmptySignature: model.compat?.allowEmptySignature ?? false,
 		supportsStrictTools: model.compat?.supportsStrictTools ?? false,
 		supportsMidConvoSystemMessages: model.compat?.supportsMidConvoSystemMessages ?? false,
-		supportsMidConvoToolChanges: model.compat?.supportsMidConvoToolChanges ?? false,
 	};
 }
 

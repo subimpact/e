@@ -246,7 +246,7 @@ describe("session context edits", () => {
 		session.appendMessage({
 			role: "system",
 			content: "system prompt ".repeat(3_000),
-			toolsAdded: [
+			tools: [
 				{
 					name: "example",
 					description: "tool declaration ".repeat(100),

@@ -5,13 +5,12 @@
 
 import {
 	type AssistantMessage,
+	declarationsEqual,
 	EventStream,
 	getCurrentTools,
-	getToolStateChanges,
 	normalizeContext,
-	type SystemMessage,
+	type Tool,
 	type ToolResultMessage,
-	type ToolStateChanges,
 	toToolDeclaration,
 	validateToolArguments,
 } from "@earendil-works/pi-ai";
@@ -107,7 +106,7 @@ export async function runAgentLoop(
 	signal: AbortSignal | undefined,
 	streamFn: StreamFn,
 ): Promise<AgentMessage[]> {
-	const initialMessages = declareToolChanges(context, prompts);
+	const initialMessages = syncToolSnapshot(context, prompts);
 	const newMessages: AgentMessage[] = [...initialMessages];
 	const currentContext: AgentContext = {
 		...context,
@@ -208,7 +207,7 @@ async function runLoop(
 			}
 
 			// Process prepared and queued messages before the next assistant response.
-			for (const message of declareToolChanges(currentContext, [...preparedMessages, ...pendingMessages])) {
+			for (const message of syncToolSnapshot(currentContext, [...preparedMessages, ...pendingMessages])) {
 				await emit({ type: "message_start", message });
 				await emit({ type: "message_end", message });
 				currentContext.messages.push(message);
@@ -321,16 +320,32 @@ async function runLoop(
 }
 
 /**
- * Declare tool loadout changes to the model.
+ * Sync the transcript's declared tool snapshot with the runtime's executable tools.
  *
  * `context.tools` is what the runtime can execute; the transcript's system messages declare
- * what the model may call. Before each request the difference becomes `toolsAdded` and
- * `toolsRemoved` on a system message. When a pending system message exists, its tool fields
- * are treated as intent and replaced with the delta between the committed transcript and
- * the executable set, so replay always yields exactly `context.tools`. Otherwise a new
- * system message is inserted before the first non-system pending message.
+ * what the model may call, one complete snapshot at a time. Before each request, if the
+ * transcript's current snapshot differs from `context.tools`, the full declared list is
+ * written to the pending system message, or a new system message is inserted before the
+ * first non-system pending message. When they already match, the messages pass through
+ * untouched.
  */
-function declareToolChanges(context: AgentContext, pendingMessages: AgentMessage[]): AgentMessage[] {
+function syncToolSnapshot(context: AgentContext, pendingMessages: AgentMessage[]): AgentMessage[] {
+	const current = getCurrentTools([...context.messages, ...pendingMessages]);
+	const declared = context.tools ?? [];
+	const currentByName = new Map(current.map((tool) => [tool.name, tool]));
+	let changed = declared.length !== currentByName.size;
+	if (!changed) {
+		for (const tool of declared) {
+			const existing = currentByName.get(tool.name);
+			if (existing === undefined || !declarationsEqual(existing, tool)) {
+				changed = true;
+				break;
+			}
+		}
+	}
+	if (!changed) return pendingMessages;
+
+	const tools: Tool[] = declared.map(toToolDeclaration);
 	let systemIndex = -1;
 	for (let i = pendingMessages.length - 1; i >= 0; i--) {
 		if (pendingMessages[i].role === "system") {
@@ -338,40 +353,18 @@ function declareToolChanges(context: AgentContext, pendingMessages: AgentMessage
 			break;
 		}
 	}
-	const pending = pendingMessages[systemIndex] as SystemMessage | undefined;
-	const baseline = pending
-		? pendingMessages.map((message, index) =>
-				index === systemIndex ? withToolChanges(pending, NO_CHANGES) : message,
-			)
-		: pendingMessages;
-	const changes = getToolStateChanges(
-		getCurrentTools([...context.messages, ...baseline]),
-		(context.tools ?? []).map(toToolDeclaration),
-	);
-	const unchanged = changes.toolsAdded.length === 0 && changes.toolsRemoved.length === 0;
-
-	if (pending) {
-		// Keep the caller's message object when it already declares no tool changes.
-		if (unchanged && !pending.toolsAdded?.length && !pending.toolsRemoved?.length) return pendingMessages;
-		return baseline.map((message, index) => (index === systemIndex ? withToolChanges(pending, changes) : message));
+	if (systemIndex !== -1) {
+		return pendingMessages.map((message, index) =>
+			index === systemIndex ? ({ ...message, tools } as AgentMessage) : message,
+		);
 	}
-	if (unchanged) return pendingMessages;
-	const update = withToolChanges({ role: "system", content: "", timestamp: Date.now() }, changes);
 	const insertIndex = pendingMessages.findIndex((message) => message.role !== "system");
 	const index = insertIndex === -1 ? pendingMessages.length : insertIndex;
-	return [...pendingMessages.slice(0, index), update, ...pendingMessages.slice(index)];
-}
-
-const NO_CHANGES: ToolStateChanges = { toolsAdded: [], toolsRemoved: [] };
-
-/** Copy a system message with its tool fields replaced by `changes`; empty lists omit the field. */
-function withToolChanges(message: SystemMessage, { toolsAdded, toolsRemoved }: ToolStateChanges): SystemMessage {
-	const { toolsAdded: _added, toolsRemoved: _removed, ...rest } = message;
-	return {
-		...rest,
-		...(toolsAdded.length > 0 ? { toolsAdded } : {}),
-		...(toolsRemoved.length > 0 ? { toolsRemoved } : {}),
-	};
+	return [
+		...pendingMessages.slice(0, index),
+		{ role: "system", content: "", tools, timestamp: Date.now() } as AgentMessage,
+		...pendingMessages.slice(index),
+	];
 }
 
 /**
