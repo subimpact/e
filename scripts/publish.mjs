@@ -43,7 +43,12 @@ function assertBuildOutputExists(directory) {
 
 function validatePack(directory) {
 	const result = run("npm", ["pack", "--dry-run", "--ignore-scripts", "--json"], { capture: true, cwd: directory });
-	const packed = JSON.parse(result.stdout)[0];
+	const parsed = JSON.parse(result.stdout);
+	// npm 12 keys `npm pack --json` output by package name instead of returning an array.
+	const packed = Array.isArray(parsed) ? parsed[0] : Object.values(parsed)[0];
+	if (!packed || typeof packed.filename !== "string") {
+		throw new Error(`Unexpected npm pack --json output in ${directory}`);
+	}
 	console.log(`  ${packed.filename}: ${packed.files.length} files, ${packed.size} bytes packed, ${packed.unpackedSize} bytes unpacked`);
 }
 
