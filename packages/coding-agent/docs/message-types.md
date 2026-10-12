@@ -98,14 +98,12 @@ interface SystemMessage {
   role: "system";
   content: string | TextContent[];
   sections?: Record<string, string | null>;
-  toolsAdded?: Tool[];
-  toolsRemoved?: ToolReference[];
-  replace?: boolean;
+  tools?: Tool[];
   timestamp: number;
 }
 ```
 
-The leading system message declares the initial prompt and tools. Later system messages can append instructions, replace or remove named prompt sections, and add or remove tools. Replaying them in order yields the current state. A message with `replace: true` discards the earlier state and establishes a complete new baseline.
+The leading system message declares the initial prompt and tools. Later system messages can append instructions and replace or remove named prompt sections. A message with `tools` carries the complete tool list from that point on and replaces any earlier list; omit it to keep the current tools. Replaying them in order yields the current state. Sessions written by e 0.99.12 and earlier stored `toolsAdded`/`toolsRemoved` deltas; e converts them to full lists when it loads the session.
 
 ### UserMessage
 

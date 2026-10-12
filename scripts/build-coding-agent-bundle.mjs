@@ -15,12 +15,10 @@ const bundleDir = join(codingAgentDistDir, "bundle");
 const banner = {
 	js: 'import { createRequire as __piCreateRequire } from "node:module"; const require = __piCreateRequire(import.meta.url);',
 };
+// e publishes the bundle only, so every workspace package (chord, pi-ai, pi-tui,
+// pi-agent-core) is inlined. Nothing from the upstream @earendil-works scope is
+// installed with @subimpact/e.
 const allowedExternalPackages = new Set([
-	"@earendil-works/chord",
-	"@earendil-works/chord/bundler",
-	"@earendil-works/chord/context",
-	"@earendil-works/chord/delta",
-	"@earendil-works/chord/node",
 	"@silvia-odwyer/photon-node",
 	"jiti",
 	// Optional native accelerators. Their callers fall back to JavaScript when absent.
@@ -31,6 +29,9 @@ const allowedExternalPackages = new Set([
 	// Optional debug output coloring.
 	"supports-color",
 ]);
+
+// Externals the bundle cannot run without (the rest of the allowed set is optional).
+const requiredExternalPackages = new Set(["@silvia-odwyer/photon-node", "jiti"]);
 
 const lazyJitiPlugin = {
 	name: "lazy-jiti-transform",
@@ -86,7 +87,7 @@ function commonBuildOptions() {
 		banner,
 		bundle: true,
 		define: { PI_BUNDLED_NODE: "true" },
-		external: ["@earendil-works/chord", "@silvia-odwyer/photon-node"],
+		external: ["@silvia-odwyer/photon-node"],
 		format: "esm",
 		legalComments: "none",
 		logLevel: "warning",
@@ -124,6 +125,14 @@ function validateExternalImports(metafiles) {
 	}
 	if (unexpected.size > 0) {
 		throw new Error(`Bundle left unexpected external imports: ${Array.from(unexpected).sort().join(", ")}`);
+	}
+	// The published manifest lists only what the bundle loads at runtime. Every
+	// required external must be a runtime dependency, or npm installs break.
+	const manifest = JSON.parse(readFileSync(join(codingAgentDir, "package.json"), "utf8"));
+	const runtimeDeps = new Set(Object.keys(manifest.dependencies ?? {}));
+	const missing = Array.from(requiredExternalPackages).filter((name) => !runtimeDeps.has(name));
+	if (missing.length > 0) {
+		throw new Error(`Bundle externals missing from ${manifest.name} dependencies: ${missing.join(", ")}`);
 	}
 }
 

@@ -148,17 +148,13 @@ A tool can run other tools with `ctx.executeTool(name, args, { signal, onUpdate 
 
 See [`hello.ts`](../examples/extensions/hello.ts), [`todo.ts`](../examples/extensions/todo.ts), [`dynamic-tools.ts`](../examples/extensions/dynamic-tools.ts), and [`truncated-tool.ts`](../examples/extensions/truncated-tool.ts).
 
-### Tool exposure
+### Tool visibility
 
-`exposure` controls how the model reaches a tool. "Callable" means callable from other tools through `ctx.executeTool()` (`ctx.tools`):
-
-- `direct` (default): declared to the model while active, and callable while active.
-- `model-only`: declared to the model while active, never callable. Use it for tools that orchestrate other tools or ask the user.
-- `hidden`: registered but unreachable. Re-register a tool with `exposure: "hidden"` to withdraw it, since tools cannot be unregistered.
+Every active tool is declared to the model in full on every request, and `ctx.tools` lists the same active tools for `ctx.executeTool()`. e has no hidden, model-only, or deferred tools, and no mid-conversation tool loadouts: the model always sees exactly what it can call. Extensions written for upstream pi that set `exposure: "hidden"` or `"model-only"`, or implement `prepareLoadout`, still load; e warns at install and load time, ignores those fields, and registers the tool as an ordinary visible tool. See [why some extensions will not run on e](https://e.subimpact.net/extensions/).
 
 `namespace: { name, description, instructions }` groups related tools. `description` summarizes the group; `instructions` holds longer usage guidance and is not listed.
 
-Registering a `direct` or `model-only` tool activates it; the other exposures are not activated on registration. The active set (`pi.getActiveTools()`, `pi.setActiveTools()`) is the set of tools declared to the model. `pi.getAllTools()` reports each tool's `exposure`, `namespace`, and `annotations`.
+Registering a tool activates it. The active set (`pi.getActiveTools()`, `pi.setActiveTools()`) is the set of tools declared to the model. `pi.getAllTools()` reports each tool's `namespace` and `annotations`.
 
 `annotations` are hints about what a tool does: `readOnlyHint`, `destructiveHint`, `idempotentHint`, and `openWorldHint`. Missing hints take the defaults: a tool is not read-only, and may be destructive and reach an open world. The hints are not verified, but a permission extension can use them to decide which calls to confirm. This confirms the calls Codex asks approval for:
 
@@ -174,13 +170,11 @@ pi.on("tool_call", async (event, ctx) => {
 });
 ```
 
-A tool that orchestrates other tools can adjust what the model sees while it is active with `prepareLoadout(loadout)`. It runs whenever the active tools change and receives the declared tools, the callable tools, and every registered tool with its exposure and namespace. It returns replacement `descriptions` for declared tools (including its own) and `hiddenDeclarations`: active tools whose declarations requests leave out while they stay active and callable. A tool can implement the same behavior under a different name using only this hook, `exposure`, and `ctx.executeTool()`.
-
 ### Activate tools dynamically
 
 Register every tool first, keep optional tools inactive, and use `pi.setActiveTools()` from a loader tool to select the desired active tools. Names must already be registered; unknown names are ignored.
 
-Pi records the initial prompt and tool set in the transcript's first system message, then appends tool and prompt changes before the next model request. Providers that cannot represent the transition receive a complete transcript checkpoint, which can invalidate the cached prefix.
+When the active set changes, the next request declares the complete new tool list. Changing tools mid-session can invalidate the provider's cached prompt prefix, so prefer settling the active set early.
 
 ### Context and session changes
 
