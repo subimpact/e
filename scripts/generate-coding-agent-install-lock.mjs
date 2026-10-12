@@ -16,11 +16,9 @@ const internalPackagePrefix = "@earendil-works/pi-";
 // internal workspace whose version must match the install lock.
 const internalPackageNames = new Set(["@earendil-works/chord", "@subimpact/e"]);
 const installPackageName = "@earendil-works/pi-coding-agent-install";
-const allowedInstallScriptPackages = new Map([
-	["@google/genai@2.21.0", "preinstall is a no-op in the published package"],
-	["esbuild@0.28.2", "postinstall selects and verifies the platform-specific esbuild binary"],
-	["protobufjs@7.6.6", "postinstall only warns about protobufjs version scheme mismatches"],
-]);
+// e ships a self-contained bundle whose runtime dependencies (jiti, photon-node) run no install
+// scripts. Any package that adds one must be reviewed and listed here.
+const allowedInstallScriptPackages = new Map();
 
 const args = new Set(process.argv.slice(2));
 const checkOnly = args.has("--check");
@@ -366,11 +364,10 @@ function validateGeneratedFiles(installerPackageJson, installLock, internalNames
 		}
 	}
 
+	// The bundle's runtime dependencies are pure JavaScript and WebAssembly, so the install lock may
+	// legitimately carry no platform-specific entries.
 	const platformPackageCount = Object.values(installLock.packages).filter((entry) => entry.os || entry.cpu || entry.libc)
 		.length;
-	if (platformPackageCount === 0) {
-		errors.push("no platform-specific optional dependency entries found");
-	}
 
 	if (errors.length > 0) {
 		throw new Error(`Generated installer lock failed validation:\n${errors.map((error) => `  - ${error}`).join("\n")}`);

@@ -51,6 +51,16 @@ dissent; forking is the other.
   Cloudflare carried pi branding (`pi.dev` referer, "Pi" billing origin). e
   defaults it to `false`: nothing about e's users leaves by default, not even
   attribution upstream's way.
+- **No tool changes mid-conversation (0.100.0)**: upstream's deferred and
+  mid-conversation tool loading reached e through the sync and shipped in
+  0.99.11 and 0.99.12 on six Anthropic models. 0.100.0 deleted the whole path:
+  every request declares the complete tool list, on every provider, and
+  `npm run check` now fails if any of it comes back.
+- **Nothing from upstream installs with e (0.100.1)**: `@subimpact/e` ships one
+  self-contained bundle with two runtime dependencies (`jiti` for loading
+  extensions, `photon-node` for images). Earlier releases also pulled upstream's
+  published `pi-ai`, `pi-tui`, `pi-agent-core`, and `chord` packages, unused by the
+  `e` command but present on disk.
 
 ## What compatibility means
 
@@ -60,6 +70,12 @@ install and run unmodified.
 
 Packages that require the 0.99 built-in MCP, codemode, or tool-search APIs do
 not work in e. That is not a bug; it is the point.
+
+Extensions that use hidden or model-only tools (`exposure`), tool loadout hooks
+(`prepareLoadout`), or mid-conversation tool changes still install and load: e
+prints a warning at install and load time, ignores those features, and registers
+the tool as an ordinary visible tool. The warning links to
+[why some extensions will not run on e](https://e.subimpact.net/extensions/).
 
 Sub-agents do not exist in e either: the upstream sub-agent machinery
 (`src/experimental/durable/subagent.ts` and the sub-agent example extension)
@@ -77,6 +93,7 @@ execution path it ever had was codemode, which does not exist in e.
 |---|---|---|
 | Core tools | read, write, edit, bash | read, write, edit, bash (same) |
 | `mcp`, `codemode`, `tool-search` | **Removed** | Built-in extensions |
+| Hidden, deferred, or mid-conversation tool changes | **Removed** (0.100.0); extensions using them get a warning | Supported |
 | Sub-agents | **Removed** (carved out) | Experimental tree (`durable/subagent.ts`), example extension |
 | Classical pi packages | Work unmodified | Work |
 | Packages needing 0.99 built-in APIs | Do not (by design) | Do |
@@ -84,7 +101,8 @@ execution path it ever had was codemode, which does not exist in e.
 | User config dir | `~/.e/agent` (override: `E_CODING_AGENT_DIR`) | `~/.pi/agent` |
 | Project config dir | `.pi/` (same as pi, stays shared) | `.pi/` |
 | Startup update check | Disabled (no pi.dev calls) | On |
-| Upstream fixes | Cherry-picked weekly; addons never flow back | Source |
+| Install footprint | One bundle, two runtime dependencies | Unbundled packages |
+| Upstream fixes | Cherry-picked daily; addons never flow back | Source |
 
 ## Attribution and licenses
 
@@ -94,7 +112,8 @@ execution path it ever had was codemode, which does not exist in e.
 - The npm publishing name, binary name, defaults, and docs differ; the code lineage does
   not. See [LICENSE](LICENSE) (MIT, unchanged).
 - Third-party pi extensions, packages, and SDK usage built on the classical tool set
-  keep working unmodified.
+  keep working unmodified. `import` from `@subimpact/e` loads the same self-contained
+  bundle as the CLI; no TypeScript declarations are published.
 
 ## Development
 

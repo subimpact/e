@@ -1565,8 +1565,7 @@ interface SystemMessage {
   role: "system";
   content: string | TextContent[];             // leading: base prompt; later: added instructions
   sections?: Record<string, string | null>;    // named prompt sections; later messages patch by name, null removes
-  toolsAdded?: Tool[];                         // tools that become available here
-  toolsRemoved?: ToolReference[];              // tools that stop being available here
+  tools?: Tool[];                              // the complete tool list from here on; omit to keep the current one
   timestamp: number;
 }
 ```
@@ -1577,9 +1576,9 @@ Sections are opaque text rendered verbatim after `content`, joined by blank line
 import { getCurrentSystemPrompt, getCurrentTools } from "@earendil-works/pi-ai";
 
 const messages: Message[] = [
-  { role: "system", content: "You are helpful.", sections: { rules: "<rules>Be brief.</rules>" }, toolsAdded: [readTool], timestamp: 1 },
+  { role: "system", content: "You are helpful.", sections: { rules: "<rules>Be brief.</rules>" }, tools: [readTool], timestamp: 1 },
   { role: "user", content: "hi", timestamp: 2 },
-  { role: "system", content: "", sections: { rules: "<rules>Be thorough.</rules>" }, toolsRemoved: [{ name: "read" }], timestamp: 3 },
+  { role: "system", content: "", sections: { rules: "<rules>Be thorough.</rules>" }, tools: [], timestamp: 3 },
 ];
 getCurrentSystemPrompt(messages); // "You are helpful.\n\n<rules>Be thorough.</rules>"
 getCurrentTools(messages);        // []
@@ -1587,7 +1586,7 @@ getCurrentTools(messages);        // []
 
 A custom `Provider` or `ProviderStreams` implementation reads the prompt and tools the same way from `context.messages`; `context.systemPrompt` and `context.tools` do not exist at that layer.
 
-Models that accept system messages mid-conversation (`supportsMidConvoSystemMessages` in the model's compat settings, set by the generated catalog for verified models) receive each later system message in place, so the cached prefix stays intact; section changes are framed by name for the model. Every other model receives `collapseSystemMessages(transcript)`: the replayed prompt and current tools as the leading system message, with later system messages dropped. Anthropic models that also set `supportsMidConvoToolChanges` send tool changes as native `tool_addition`/`tool_removal` blocks: the initial tools stay active at the top level, every later declaration is sent with `defer_loading` (plus a stable deferred placeholder from the first request, which keeps Anthropic's deferred-tool scaffolding in the cached prefix), and removed tools stay declared, so tool changes do not invalidate the prompt cache. That needs at least one initial tool and no same-name redefinition; otherwise the current tool list is sent at the top level with the system text only. OpenAI Responses models with `supportsAdditionalTools` or `supportsToolSearch` anchor additive tool changes at their message; everything else sends the current tool list at the top level.
+Models that accept system messages mid-conversation (`supportsMidConvoSystemMessages` in the model's compat settings, set by the generated catalog for verified models) receive each later system message in place, so the cached prefix stays intact; section changes are framed by name for the model. Every other model receives `collapseSystemMessages(transcript)`: the replayed prompt and current tools as the leading system message, with later system messages dropped. Tools are never sent as deltas: every request declares the complete current tool list at the top level. There are no deferred, hidden, or incrementally loaded tools on any provider (e commitment 3, no tool search).
 
 ## Context Serialization
 

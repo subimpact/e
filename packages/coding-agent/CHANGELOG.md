@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.100.1] - 2026-10-12
+
+### Fixed
+
+- Nothing from upstream installs with e any more. `@subimpact/e` listed upstream's published `@earendil-works/pi-ai`, `pi-tui`, `pi-agent-core` and `chord` packages (0.99.2) as runtime dependencies. The `e` command never loaded them (it runs one self-contained bundle), but every install downloaded about 16 MB of upstream code, including the tool search path e removed. The package now has two runtime dependencies: `jiti` for loading extensions and `photon-node` for images. `chord` is inlined into the bundle.
+- `import` from `@subimpact/e` works again. The library entry pointed at unbundled files that resolved to those upstream packages and failed at import (`setImageTranscoder` missing) since at least 0.99.12. It now loads the same self-contained bundle as the CLI. TypeScript declarations are no longer published.
+- A fresh clone builds again. After the 0.100.0 version bump the workspace packages no longer matched their `^0.99.2` ranges, so a clean `npm ci` pulled upstream's packages instead of linking e's own, and the build failed. The evals workspace now links e's own agent instead of upstream's.
+- `npm run publish` handles npm 12's `npm pack --json` output (port of upstream 6fb2e7815).
+- The extension, message and session format docs no longer describe the removed `exposure`, `prepareLoadout` and `toolsAdded`/`toolsRemoved` surfaces.
+
+### Changed
+
+- With `showHardwareCursor` enabled, e uses only the terminal cursor instead of also drawing its own reverse-video cursor (upstream 1cedd3272).
+- Claude Opus 5.5, Sonnet 5.5 and Haiku 5.5 metadata now comes from models.dev, unchanged in value (upstream ce950d78f).
+- Upstream sync of 2026-10-12: compaction summaries omit thinking, the Codex request body is sent as a copied Uint8Array, delayed terminal replies stay out of keyboard input, CompactionStatusIndicator accepts colorFn overrides, and herdr gets kitty images.
+
+### Refused
+
+- Upstream's published configuration schemas (7f9e1198f, 96abe9a5a): about 5,200 lines that rewrite settings, model and theme loading, make themes with unknown fields fail to load, and point every `$schema` at pi.dev.
+
 ## [0.100.0] - 2026-10-11
 
 ### Breaking

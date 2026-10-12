@@ -25,9 +25,14 @@ const failures = [];
 
 function checkSource(source, manifest) {
 	const file = source.fileName;
+	// A package published as a self-contained bundle (main points into dist/bundle) inlines its
+	// source imports, so build-time devDependencies satisfy them. The bundle build then checks that
+	// every remaining runtime external is a real dependency.
+	const bundled = typeof manifest.main === "string" && manifest.main.includes("dist/bundle/");
 	const declared = new Set([
 		manifest.name,
 		...Object.keys(manifest.dependencies ?? {}),
+		...(bundled ? Object.keys(manifest.devDependencies ?? {}) : []),
 		...Object.keys(manifest.optionalDependencies ?? {}),
 		...Object.keys(manifest.peerDependencies ?? {}),
 	]);

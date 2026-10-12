@@ -35,7 +35,13 @@ To reuse an existing pi installation's config, point `E_CODING_AGENT_DIR` (or th
 
 Classical pi packages, extensions, skills, prompt templates, and themes install with
 `e install <package>` exactly as before. Packages that require the 0.99 built-in MCP,
-codemode, or tool-search APIs do not work in e, by design.
+codemode, or tool-search APIs do not work in e, by design. Extensions that use hidden or
+deferred tools, tool loadout hooks, or mid-conversation tool changes still install, with a
+warning: e ignores those features. [Why](https://e.subimpact.net/extensions/).
+
+The package is one self-contained bundle with two runtime dependencies (`jiti`,
+`photon-node`). `import` from `@subimpact/e` loads that same bundle; no TypeScript
+declarations are published.
 
 See the [documentation](docs/index.md) for full setup and usage instructions.
 
