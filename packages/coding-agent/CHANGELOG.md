@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- Print mode (`-p`) now warns and exits non-zero when the response was truncated because the model hit its output token limit (upstream 441f5767c).
+- On Windows, transient EPERM errors while acquiring the auth storage lock (delete-pending lock directories) are retried, capped at 5 attempts; real permission errors still fail fast (upstream e6fb2581d).
+- `~` in package resource setting patterns now expands to the home directory before matching (upstream 6a51a39d4).
+- Runs started by custom messages now emit `before_agent_start`; the event carries a `messageType` trigger (`"user"` or `"custom"`) and the session counts as busy from run start. Ported to e's carve: no MCP plumbing and no tool loadout API (upstream a447ba11f).
+
 ## [0.100.1] - 2026-10-12
 
 ### Fixed
