@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed unhandled wheel input over a focused overlay not scrolling the transcript underneath (upstream 11f991145).
+
 ### Added
 
 - Added `Box.setPaddingX(...)` and `Text.setPaddingX(...)` (ported from upstream #10557).
