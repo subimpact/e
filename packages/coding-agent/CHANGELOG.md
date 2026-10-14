@@ -18,6 +18,7 @@
 - A fresh clone builds again. After the 0.100.0 version bump the workspace packages no longer matched their `^0.99.2` ranges, so a clean `npm ci` pulled upstream's packages instead of linking e's own, and the build failed. The evals workspace now links e's own agent instead of upstream's.
 - `npm run publish` handles npm 12's `npm pack --json` output (port of upstream 6fb2e7815).
 - The extension, message and session format docs no longer describe the removed `exposure`, `prepareLoadout` and `toolsAdded`/`toolsRemoved` surfaces.
+- Fixed prompt templates dropping empty quoted arguments (`""` or `''`), which shifted later positional arguments and prevented positional defaults from applying ([#10867](https://github.com/earendil-works/pi/issues/10867)) (upstream 9fe3f3716).
 
 ### Changed
 
