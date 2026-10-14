@@ -3,6 +3,8 @@
 ## [Unreleased]
 
 ### Fixed
+- Fixed invalid `\u` escapes in tool-call arguments (such as `\usepackage`) breaking JSON parsing and dropping the field and everything after it; they are now kept as literal text like other invalid escapes (upstream 4b994d5e5).
+- Fixed Anthropic rejecting error tool results that contain images; images in error tool results are now replaced with a text note (upstream 34a8bb38b).
 - Fixed "The upstream provider returned an error" (gateway wording such as upstream issue 10842) not being retried as a transient provider error (upstream 7bd01fb92).
 - Reduced context-limit request failures by estimating input at 3.5 characters per token instead of 4 when calculating output limits ([#10497](https://github.com/earendil-works/pi/issues/10497)) (ported from upstream #75fe07)
 - Fixed `server_busy` and `servers are currently busy` provider errors ending the turn instead of being retried ([#10543](https://github.com/earendil-works/pi/issues/10543)) (ported from upstream #708dbb)
