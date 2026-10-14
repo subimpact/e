@@ -12,19 +12,17 @@
 - Fixed built-in model costs missing prompt-length pricing tiers for OpenCode, OpenCode Go, OpenRouter, Vercel AI Gateway, Google, MiniMax, and other models.dev providers, which undercounted the cost of long prompts on models such as Claude Haiku 5.5, Gemini 3.1 Pro, and GPT-5.4. OpenRouter time-of-day pricing is not modeled (ported from upstream #a10e74)
 - Fixed Anthropic browser login failing with "localhost refused to connect" when port 53692 is reserved or in use, for example by Hyper-V/WSL port exclusions on Windows: login now falls back to a free loopback port ([#10571](https://github.com/earendil-works/pi/issues/10571)) (ported from upstream #ae2fc2)
 - Fixed Mistral responses that end with `finish_reason: "error"` not being retried ([#10487](https://github.com/earendil-works/pi/issues/10487)) (ported from upstream #59f995)
-
 - Fixed Mistral streams being aborted mid-generation (e.g. during long thinking) after the request timeout; the timeout now applies only to waiting for response headers (ported from upstream #10609).
 - Fixed tool calls whose final arguments are malformed JSON silently running with only the fields parsed before the error; such calls now carry `argumentsError` and fail validation with the raw arguments text, so the model sees what it sent (upstream 87f9a3641).
+- Fixed OpenAI-compatible responses showing thinking after the answer when a proxy such as LiteLLM sends reasoning and content in the same stream chunk ([#10926](https://github.com/earendil-works/pi/issues/10926)) (upstream 63035734f)
+- Fixed Gemini 4 Argon requests on Google Vertex failing with "Thinking budget is not supported", and its thinking level being ignored on the Gemini API, by sending `thinkingLevel` for Gemini 4 and later models ([#10890](https://github.com/earendil-works/pi/issues/10890)) (upstream 1692bba63)
+- Fixed Xiaomi MiMo models failing with a 400 at the `minimal` thinking level by sending only the documented thinking on/off toggle and exposing only the `off` and `high` levels ([#10818](https://github.com/earendil-works/pi/issues/10818)) (upstream 6374c2baf)
+- Fixed `openai-codex/gpt-6.1-sol` using a 272K context window instead of the 500K window Codex now provides ([#10840](https://github.com/earendil-works/pi/issues/10840)) (upstream 5712b134e)
+- Fixed OpenCode Go Gemini models failing with a 404 by moving OpenCode Zen and OpenCode Go to the `opencode.ai/inference` endpoints, and added Google Generative AI support to the OpenCode Go provider (upstream 195120a91)
+- Fixed OpenCode Go MiniMax M2.7 failing with "Model does not support this protocol" by using the Anthropic Messages API (upstream 195120a91)
+- Fixed automatic retry not triggering for gateway `Unable to forward upstream stream` errors ([#10920](https://github.com/earendil-works/pi/issues/10920)) (upstream 7efebff18)
+- Changed the `kimi-coding` provider to use OpenAI Chat Completions at `https://api.kimi.com/coding/v1`, the protocol used by the official Kimi Code client, so mid-conversation tool additions keep the prompt cache; `models.json` overrides of the `kimi-coding` base URL must now include `/v1` ([#10720](https://github.com/earendil-works/pi/issues/10720)) (upstream b06c1f2cf)
 
-- Fixed OpenAI-compatible responses showing thinking after the answer when a proxy such as LiteLLM sends reasoning and content in the same stream chunk ([#10926](https://github.com/earendil-works/pi/issues/10926))
-- Fixed Gemini 4 Argon requests on Google Vertex failing with "Thinking budget is not supported", and its thinking level being ignored on the Gemini API, by sending `thinkingLevel` for Gemini 4 and later models ([#10890](https://github.com/earendil-works/pi/issues/10890))
-
-- Fixed Xiaomi MiMo models failing with a 400 at the `minimal` thinking level by sending only the documented thinking on/off toggle and exposing only the `off` and `high` levels ([#10818](https://github.com/earendil-works/pi/issues/10818))
-- Fixed `openai-codex/gpt-6.1-sol` using a 272K context window instead of the 500K window Codex now provides ([#10840](https://github.com/earendil-works/pi/issues/10840))
-- Fixed OpenCode Go Gemini models failing with a 404 by moving OpenCode Zen and OpenCode Go to the `opencode.ai/inference` endpoints, and added Google Generative AI support to the OpenCode Go provider
-- Fixed OpenCode Go MiniMax M2.7 failing with "Model does not support this protocol" by using the Anthropic Messages API
-
-- Fixed automatic retry not triggering for gateway `Unable to forward upstream stream` errors ([#10920](https://github.com/earendil-works/pi/issues/10920))
 ## [1.2.0] - 2026-10-12
 
 ### Added
