@@ -29,7 +29,7 @@
 ### Refused
 
 - Upstream's published configuration schemas (7f9e1198f, 96abe9a5a): about 5,200 lines that rewrite settings, model and theme loading, make themes with unknown fields fail to load, and point every `$schema` at pi.dev.
-
+- Fixed `read` line-range labels for numeric-string or null arguments in the TUI, session tree, HTML exports, and examples ([#9887](https://github.com/earendil-works/pi/issues/9887))
 ## [0.100.0] - 2026-10-11
 
 ### Breaking
