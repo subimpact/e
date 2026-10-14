@@ -30,6 +30,7 @@
 
 - Upstream's published configuration schemas (7f9e1198f, 96abe9a5a): about 5,200 lines that rewrite settings, model and theme loading, make themes with unknown fields fail to load, and point every `$schema` at pi.dev.
 - Fixed `read` line-range labels for numeric-string or null arguments in the TUI, session tree, HTML exports, and examples ([#9887](https://github.com/earendil-works/pi/issues/9887))
+- Fixed `--model` choosing a provider by catalog order when several providers offer the match; Pi now prefers the provider with credentials and otherwise reports the ambiguity. `--models` and `enabledModels` add a model for each provider that offers it and warn about the ambiguity ([#10160](https://github.com/earendil-works/pi/issues/10160))
 ## [0.100.0] - 2026-10-11
 
 ### Breaking
