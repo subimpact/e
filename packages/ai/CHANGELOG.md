@@ -65,6 +65,7 @@
 
 ### Fixed
 
+- Fixed `The service is temporarily unavailable` provider errors not being retried, which also made compaction fail on the first attempt ([#10965](https://github.com/earendil-works/pi/issues/10965)) (upstream 550f1f3ec)
 - Fixed Claude Haiku 5.5 and Opus 5 rejecting disabled thinking by sending `thinking: {type: "disabled"}` without effort markers or `block_binding` for the `off` level ([#10753](https://github.com/earendil-works/pi/issues/10753)) (upstream dc939913f)
 - Fixed Mistral streams being aborted mid-generation (e.g. during long thinking) after the request timeout; the timeout now applies only to waiting for response headers ([#10609](https://github.com/earendil-works/pi/issues/10609))
 - Fixed OpenRouter router models such as `openrouter/auto` showing a cost of -$1,000,000 per 1M tokens; OpenRouter's negative placeholder prices are now 0 ([#10672](https://github.com/earendil-works/pi/pull/10672) by [@davidbrai](https://github.com/davidbrai))
