@@ -3,8 +3,9 @@
 ## [Unreleased]
 
 ### Fixed
+<<<<<<< HEAD
 - Fixed invalid `\u` escapes in tool-call arguments (such as `\usepackage`) breaking JSON parsing and dropping the field and everything after it; they are now kept as literal text like other invalid escapes (upstream 4b994d5e5).
-- Fixed Anthropic rejecting error tool results that contain images; images in error tool results are now replaced with a text note (upstream 34a8bb38b).
+- Fixed Anthropic and Bedrock Claude requests failing with a 400 when an error tool result contains images; error tool result images are now kept ([#10794](https://github.com/earendil-works/pi/issues/10794)) (upstream 5ab7fe74c, superseding the previous text-note replacement from 34a8bb38b)
 - Fixed "The upstream provider returned an error" (gateway wording such as upstream issue 10842) not being retried as a transient provider error (upstream 7bd01fb92).
 - Reduced context-limit request failures by estimating input at 3.5 characters per token instead of 4 when calculating output limits ([#10497](https://github.com/earendil-works/pi/issues/10497)) (ported from upstream #75fe07)
 - Fixed `server_busy` and `servers are currently busy` provider errors ending the turn instead of being retried ([#10543](https://github.com/earendil-works/pi/issues/10543)) (ported from upstream #708dbb)
@@ -22,6 +23,21 @@
 - Fixed OpenCode Go MiniMax M2.7 failing with "Model does not support this protocol" by using the Anthropic Messages API (upstream 195120a91)
 - Fixed automatic retry not triggering for gateway `Unable to forward upstream stream` errors ([#10920](https://github.com/earendil-works/pi/issues/10920)) (upstream 7efebff18)
 - Changed the `kimi-coding` provider to use OpenAI Chat Completions at `https://api.kimi.com/coding/v1`, the protocol used by the official Kimi Code client, so mid-conversation tool additions keep the prompt cache; `models.json` overrides of the `kimi-coding` base URL must now include `/v1` ([#10720](https://github.com/earendil-works/pi/issues/10720)) (upstream b06c1f2cf)
+=======
+
+- Fixed tool-call argument parsing dropping fields when a string contains an invalid `\u` escape such as `\usepackage` ([#10868](https://github.com/earendil-works/pi/issues/10868))
+- Fixed Anthropic and Bedrock Claude requests failing with a 400 when an error tool result contains images; the images are now sent after the tool results of the turn, so the model still sees them ([#10794](https://github.com/earendil-works/pi/issues/10794))
+- Fixed OpenCode Go Gemini models failing with a 404 by moving OpenCode Zen and OpenCode Go to the `opencode.ai/inference` endpoints, and added Google Generative AI support to the OpenCode Go provider
+- Fixed OpenCode Go MiniMax M2.7 failing with "Model does not support this protocol" by using the Anthropic Messages API
+- Fixed automatic retry not triggering for gateway `Unable to forward upstream stream` errors ([#10920](https://github.com/earendil-works/pi/issues/10920))
+- Fixed automatic retry not triggering for `The service is temporarily unavailable` errors, which also made compaction fail on the first attempt ([#10965](https://github.com/earendil-works/pi/issues/10965))
+- Fixed OpenAI-compatible responses showing thinking after the answer when a proxy such as LiteLLM sends reasoning and content in the same stream chunk ([#10926](https://github.com/earendil-works/pi/issues/10926))
+- Fixed Gemini 4 Argon requests on Google Vertex failing with "Thinking budget is not supported", and its thinking level being ignored on the Gemini API, by sending `thinkingLevel` for Gemini 4 and later models ([#10890](https://github.com/earendil-works/pi/issues/10890))
+- Fixed Xiaomi MiMo models failing with a 400 at the `minimal` thinking level by sending only the documented thinking on/off toggle and exposing only the `off` and `high` levels ([#10818](https://github.com/earendil-works/pi/issues/10818))
+- Fixed `openai-codex/gpt-6.1-sol` using a 272K context window instead of the 500K window Codex now provides ([#10840](https://github.com/earendil-works/pi/issues/10840))
+- Fixed tool calls whose final arguments are malformed JSON silently running with only the fields parsed before the error; such calls now carry `argumentsError` and fail validation with the raw arguments text, so the model sees what it sent ([#10897](https://github.com/earendil-works/pi/issues/10897))
+- Fixed Claude Haiku 5.5 and Claude Opus 5 not supporting the `off` thinking level; `off` now sends `thinking: {type: "disabled"}` without effort settings ([#10753](https://github.com/earendil-works/pi/issues/10753))
+>>>>>>> 5ab7fe74c (fix(ai): keep images of error tool results for Anthropic and Bedrock Claude)
 
 ## [1.2.0] - 2026-10-12
 
