@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+<<<<<<< HEAD
+=======
+### Breaking Changes
+
+- Removed `AssistantMessageFrame`, `AssistantMessageFrameEncoder`, and `reduceAssistantMessageFrames()`. They were only used by the removed experimental agent harness.
+
+### Added
+
+- Added cache-preserving thinking level changes for GPT-6 models on the openai provider: with an API key, the level is sent as configuration_update input items instead of changing reasoning.effort, controlled by compat.supportsMidConvoEffort ([#10853](https://github.com/earendil-works/pi/issues/10853))
+
+### Changed
+
+- Changed model switching to drop thinking blocks from earlier assistant messages produced by a different model, instead of sending them as plain text; the new model no longer sees the previous model's reasoning ([#10995](https://github.com/earendil-works/pi/issues/10995)) (upstream 911309429)
+- Changed the `kimi-coding` provider to use OpenAI Chat Completions at `https://api.kimi.com/coding/v1`, the protocol used by the official Kimi Code client. K3, K3-256K, and Kimi For Coding now accept tools added mid-conversation without invalidating the prompt cache. `models.json` overrides of the `kimi-coding` base URL must now include `/v1` ([#10720](https://github.com/earendil-works/pi/issues/10720))
+- Changed model switching to drop thinking blocks from earlier assistant messages produced by a different model, instead of sending them as plain text. The new model previously saw the old model's reasoning as part of its replies and could start writing its own reasoning into the visible answer ([#10995](https://github.com/earendil-works/pi/issues/10995))
+
+>>>>>>> 911309429 (fix(ai): drop thinking from other models instead of sending it as text (#11000))
 ### Fixed
 <<<<<<< HEAD
 - Fixed invalid `\u` escapes in tool-call arguments (such as `\usepackage`) breaking JSON parsing and dropping the field and everything after it; they are now kept as literal text like other invalid escapes (upstream 4b994d5e5).
