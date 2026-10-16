@@ -2,12 +2,28 @@
 
 ## [Unreleased]
 
+## [0.100.2] - 2026-10-16
+
+### Added
+
+- `E_CLIPBOARD_OSC52=1` (or legacy `PI_CLIPBOARD_OSC52=1`) also sends copied text to the terminal with OSC 52 after the local clipboard write, as e already does over SSH. Use it when the client reaches e without SSH variables, such as a tmux or screen session attached from another machine or a remote IDE daemon ([#10826](https://github.com/earendil-works/pi/issues/10826)) (upstream 3e477eab5).
+
+### Changed
+
+- Switching models drops thinking blocks written by the previous model instead of sending them as plain text, so the new model no longer sees or imitates that reasoning ([#10995](https://github.com/earendil-works/pi/issues/10995)) (upstream 911309429).
+- The `kimi-coding` provider uses OpenAI Chat Completions at `https://api.kimi.com/coding/v1`, the protocol of the official Kimi Code client. A `models.json` override of the `kimi-coding` base URL must now include `/v1` ([#10720](https://github.com/earendil-works/pi/issues/10720)) (upstream b06c1f2cf).
+
 ### Fixed
 
 - Print mode (`-p`) now warns and exits non-zero when the response was truncated because the model hit its output token limit (upstream 441f5767c).
 - On Windows, transient EPERM errors while acquiring the auth storage lock (delete-pending lock directories) are retried, capped at 5 attempts; real permission errors still fail fast (upstream e6fb2581d).
 - `~` in package resource setting patterns now expands to the home directory before matching (upstream 6a51a39d4).
 - Runs started by custom messages now emit `before_agent_start`; the event carries a `messageType` trigger (`"user"` or `"custom"`) and the session counts as busy from run start. Ported to e's carve: no MCP plumbing and no tool loadout API (upstream a447ba11f).
+- `read` line-range labels are right for numeric-string or null arguments in the TUI, session tree and HTML exports ([#9887](https://github.com/earendil-works/pi/issues/9887)) (upstream 910149912).
+- `--model` no longer picks a provider by catalog order when several providers offer the match: e prefers the provider you have credentials for and otherwise reports the ambiguity. `--models` and `enabledModels` add the model for each provider that offers it and warn about the ambiguity ([#10160](https://github.com/earendil-works/pi/issues/10160)) (upstream d7f7e0dfe).
+- An extension overlay opened with `ctx.ui.custom({ overlay: true })` now closes itself, not whichever overlay is on top. Before, a shell overlay exiting under another extension's dialog removed the dialog and stayed on screen ignoring input ([#10648](https://github.com/earendil-works/pi/issues/10648)) (upstream a4f67eb65).
+- Mouse wheel input over a focused overlay that does not handle it scrolls the transcript underneath (upstream 11f991145).
+- Provider fixes bundled from e's `ai` package: "The service is temporarily unavailable", "The upstream provider returned an error" and "Unable to forward upstream stream" errors are retried; Anthropic and Bedrock Claude keep images in error tool results instead of failing with a 400; Claude Haiku 5.5 and Opus 5 accept the `off` thinking level; invalid `\u` escapes in tool-call arguments no longer drop fields; malformed final tool-call arguments fail validation instead of running with a partial parse; thinking is ordered before text when a completions chunk carries both; Gemini 4 models get `thinkingLevel`; Xiaomi MiMo and OpenCode Go requests no longer fail; Codex GPT-6.1 Sol uses its 500K context window. See `packages/ai/CHANGELOG.md`.
 
 ## [0.100.1] - 2026-10-12
 
@@ -29,8 +45,7 @@
 ### Refused
 
 - Upstream's published configuration schemas (7f9e1198f, 96abe9a5a): about 5,200 lines that rewrite settings, model and theme loading, make themes with unknown fields fail to load, and point every `$schema` at pi.dev.
-- Fixed `read` line-range labels for numeric-string or null arguments in the TUI, session tree, HTML exports, and examples ([#9887](https://github.com/earendil-works/pi/issues/9887))
-- Fixed `--model` choosing a provider by catalog order when several providers offer the match; Pi now prefers the provider with credentials and otherwise reports the ambiguity. `--models` and `enabledModels` add a model for each provider that offers it and warn about the ambiguity ([#10160](https://github.com/earendil-works/pi/issues/10160))
+
 ## [0.100.0] - 2026-10-11
 
 ### Breaking
