@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Anthropic requests no longer fail when the provider rejects the strict tool set (grammar too large, too many strict tools, union limits): e retries once with `strict: "prefer"` tools sent non-strict, keeping `strict: "require"` tools strict (upstream d4d53612b).
+
 ## [0.100.2] - 2026-10-16
 
 ### Added

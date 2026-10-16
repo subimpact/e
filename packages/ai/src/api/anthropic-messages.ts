@@ -622,26 +622,58 @@ export const stream: StreamFunction<"anthropic-messages", AnthropicOptions> = (
 				client = created.client;
 				isOAuth = created.isOAuthToken;
 			}
-			const built = buildParams(model, normalizedContext, isOAuth, options);
-			let params = built.params;
-			if (built.providerThinkingLevel) output.providerThinkingLevel = built.providerThinkingLevel;
-			const nextParams = await options?.onPayload?.(params, model);
-			if (nextParams !== undefined) {
-				params = { ...(nextParams as MessageCreateParamsStreaming), stream: true };
-			}
 			const requestOptions = {
 				...(options?.signal ? { signal: options.signal } : {}),
 				...(options?.timeoutMs !== undefined ? { timeout: options.timeoutMs } : {}),
 				maxRetries: 0,
 			};
-			const response = await retryProviderRequest(
-				() => client.beta.messages.create(params, requestOptions).asResponse(),
-				{
-					maxRetries: options?.maxRetries,
-					maxRetryDelayMs: options?.maxRetryDelayMs,
-					signal: options?.signal,
-				},
-			);
+			let disablePreferredStrictTools = false;
+			let response: Response;
+			for (;;) {
+				options?.signal?.throwIfAborted();
+				const built = buildParams(model, normalizedContext, isOAuth, options, disablePreferredStrictTools);
+				let params = built.params;
+				if (built.providerThinkingLevel) output.providerThinkingLevel = built.providerThinkingLevel;
+				const nextParams = await options?.onPayload?.(params, model);
+				if (nextParams !== undefined) {
+					params = { ...(nextParams as MessageCreateParamsStreaming), stream: true };
+				}
+				try {
+					response = await retryProviderRequest(
+						() => client.beta.messages.create(params, requestOptions).asResponse(),
+						{
+							maxRetries: options?.maxRetries,
+							maxRetryDelayMs: options?.maxRetryDelayMs,
+							signal: options?.signal,
+						},
+					);
+					break;
+				} catch (error) {
+					// Only downgrade a rejected request, never an already-started stream.
+					if (
+						options?.signal?.aborted ||
+						disablePreferredStrictTools ||
+						!built.hasPreferredStrictTools ||
+						!(error instanceof Anthropic.APIError) ||
+						error.status !== 400 ||
+						error.type !== "invalid_request_error" ||
+						![
+							"The compiled grammar is too large",
+							"Too many strict tools (",
+							"Schemas contains too many parameters with union types (",
+						].some((message) => error.message.includes(message))
+					) {
+						throw error;
+					}
+					disablePreferredStrictTools = true;
+					appendAssistantMessageDiagnostic(output, {
+						type: "anthropic_strict_tools_fallback",
+						timestamp: Date.now(),
+						error: { message: error.message },
+						details: { reason: "strict_tool_limits_exceeded" },
+					});
+				}
+			}
 			await options?.onResponse?.({ status: response.status, headers: headersToRecord(response.headers) }, model);
 			stream.push({ type: "start", partial: output });
 
@@ -1112,8 +1144,11 @@ function buildParams(
 	context: TranscriptContext,
 	isOAuthToken: boolean,
 	options?: AnthropicOptions,
+	disablePreferredStrictTools = false,
 ): {
 	params: MessageCreateParamsStreaming;
+	/** Whether any `strict: "prefer"` tool was sent with a strict schema in this request. */
+	hasPreferredStrictTools: boolean;
 	/** Effort of the final effort marker, recorded on the reply so later requests can replay it. */
 	providerThinkingLevel: AnthropicEffort | undefined;
 } {
@@ -1183,14 +1218,21 @@ function buildParams(
 
 	const toolCacheControl = compat.supportsCacheControlOnTools ? cacheControl : undefined;
 	const tools = getCurrentTools(context.messages);
+	let hasPreferredStrictTools = false;
 	if (tools.length > 0) {
-		params.tools = convertTools(
+		const definitions = convertTools(
 			tools,
 			isOAuthToken,
 			compat.supportsEagerToolInputStreaming,
 			compat.supportsStrictTools,
 			toolCacheControl,
+			disablePreferredStrictTools,
 		);
+		hasPreferredStrictTools = definitions.some((definition, index) => {
+			const config = tools[index].constrainedSampling;
+			return definition.strict === true && config && config.type === "json_schema" && config.strict === "prefer";
+		});
+		params.tools = definitions;
 	}
 
 	// No effort is sent while thinking is disabled. Managed effort models use adaptive thinking
@@ -1246,7 +1288,11 @@ function buildParams(
 		params.fallbacks = allowedFallbackModels.map((fallback) => ({ model: fallback.model }));
 	}
 
-	return { params, providerThinkingLevel: effortMessages ? activeEffort : undefined };
+	return {
+		params,
+		hasPreferredStrictTools,
+		providerThinkingLevel: effortMessages ? activeEffort : undefined,
+	};
 }
 
 // Normalize tool call IDs to match Anthropic's required pattern and length
@@ -1522,11 +1568,16 @@ function convertTools(
 	supportsEagerToolInputStreaming: boolean,
 	supportsStrictTools: boolean,
 	cacheControl?: CacheControlEphemeral,
+	disablePreferredStrictTools = false,
 ): BetaTool[] {
 	if (!tools) return [];
 
 	return tools.map((tool, index) => {
-		const strict = resolveJsonSchemaStrictSampling(tool, supportsStrictTools, isAnthropicStrictUnsupportedKeyword);
+		const config = tool.constrainedSampling;
+		const strict =
+			disablePreferredStrictTools && config && config.type === "json_schema" && config.strict === "prefer"
+				? undefined
+				: resolveJsonSchemaStrictSampling(tool, supportsStrictTools, isAnthropicStrictUnsupportedKeyword);
 		const parameters = getJsonSchemaToolParameters(tool, strict);
 		const schema = parameters as { properties?: unknown; required?: string[] };
 		const legacyInputSchema = {
