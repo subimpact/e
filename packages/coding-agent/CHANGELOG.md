@@ -17,6 +17,10 @@
 - Switching models drops thinking blocks written by the previous model instead of sending them as plain text, so the new model no longer sees or imitates that reasoning ([#10995](https://github.com/earendil-works/pi/issues/10995)) (upstream 911309429).
 - The `kimi-coding` provider uses OpenAI Chat Completions at `https://api.kimi.com/coding/v1`, the protocol of the official Kimi Code client. A `models.json` override of the `kimi-coding` base URL must now include `/v1` ([#10720](https://github.com/earendil-works/pi/issues/10720)) (upstream b06c1f2cf).
 
+### Changed
+
+- Changed the default NVIDIA model to `nvidia/nemotron-3.5-super-vl-120b-a12b` ([#10910](https://github.com/earendil-works/pi/pull/10910) by [@cv](https://github.com/cv))
+
 ### Fixed
 
 - Print mode (`-p`) now warns and exits non-zero when the response was truncated because the model hit its output token limit (upstream 441f5767c).
