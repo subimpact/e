@@ -4,6 +4,9 @@
 
 ### Fixed
 
+- Fixed automatic retry not triggering when the Google Vertex OAuth token refresh fails with a transient network error such as `request to https://oauth2.googleapis.com/token failed, reason:` ([#10996](https://github.com/earendil-works/pi/issues/10996)) (upstream 0fbdbd3f8).
+- Fixed whitespace-only tool output (for example a bare `\r\n` from bash) being sent as-is to OpenAI Completions, OpenAI Responses, and Google providers; it now uses the same placeholder as empty output, since some providers reject whitespace-only tool content with a 400 ([#8720](https://github.com/earendil-works/pi/issues/8720)) (upstream 4dd2b149d).
+- Fixed automatic retry not triggering for gateway upstream failures such as `upstream_error: Upstream request failed`, `upstream_stream_read_error`, and `Upstream HTTP/2 stream failed` ([#10920](https://github.com/earendil-works/pi/issues/10920)) (upstream 698a2d23b).
 - Anthropic requests no longer fail when the provider rejects the strict tool set (grammar too large, too many strict tools, union limits): e retries once with `strict: "prefer"` tools sent non-strict, keeping `strict: "require"` tools strict (upstream d4d53612b).
 
 ## [0.100.2] - 2026-10-16

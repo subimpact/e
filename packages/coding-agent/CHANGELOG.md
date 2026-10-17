@@ -2,8 +2,14 @@
 
 ## [Unreleased]
 
+### Changed
+
+- The default NVIDIA model is now `nvidia/nemotron-3.5-super-vl-120b-a12b` ([#10910](https://github.com/earendil-works/pi/pull/10910)) (upstream 95364a54e).
+- The default Xiaomi MiMo model is now `mimo-v2.6-pro` (upstream 90d863f7c).
+
 ### Fixed
 
+- Compaction and branch summaries no longer fail with "generation hit the token cap" when reasoning uses most of a fixed summary output limit. Summaries now use the model's output limit, `compaction.reserveTokens` only controls when compaction starts, and `generateSummary()` / `generateSummaryWithUsage()` ignore their `reserveTokens` parameter ([#9512](https://github.com/earendil-works/pi/issues/9512), [#9075](https://github.com/earendil-works/pi/issues/9075)) (upstream 6fcb48670).
 - Anthropic requests no longer fail when the provider rejects the strict tool set (grammar too large, too many strict tools, union limits): e retries once with `strict: "prefer"` tools sent non-strict, keeping `strict: "require"` tools strict (upstream d4d53612b).
 
 ## [0.100.2] - 2026-10-16
@@ -16,10 +22,6 @@
 
 - Switching models drops thinking blocks written by the previous model instead of sending them as plain text, so the new model no longer sees or imitates that reasoning ([#10995](https://github.com/earendil-works/pi/issues/10995)) (upstream 911309429).
 - The `kimi-coding` provider uses OpenAI Chat Completions at `https://api.kimi.com/coding/v1`, the protocol of the official Kimi Code client. A `models.json` override of the `kimi-coding` base URL must now include `/v1` ([#10720](https://github.com/earendil-works/pi/issues/10720)) (upstream b06c1f2cf).
-
-### Changed
-
-- Changed the default NVIDIA model to `nvidia/nemotron-3.5-super-vl-120b-a12b` ([#10910](https://github.com/earendil-works/pi/pull/10910) by [@cv](https://github.com/cv))
 
 ### Fixed
 
