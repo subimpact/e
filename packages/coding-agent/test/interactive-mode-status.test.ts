@@ -233,6 +233,15 @@ describe("InteractiveMode.showExtensionCustom", () => {
 		initTheme("dark");
 	});
 
+	// Inline custom components go through the extension dialog stack.
+	const extensionDialogState = () => ({
+		extensionDialogs: [],
+		programStatus: { setBlocked: vi.fn() },
+		pushExtensionDialog: (InteractiveMode as any).prototype.pushExtensionDialog,
+		removeExtensionDialog: (InteractiveMode as any).prototype.removeExtensionDialog,
+		showTopExtensionDialog: (InteractiveMode as any).prototype.showTopExtensionDialog,
+	});
+
 	test("overlay custom UI reclaims input after non-overlay custom UI closes", async () => {
 		const terminal = new VirtualTerminal(80, 24);
 		const ui: TUI = new TuiMainScreen(terminal);
@@ -253,6 +262,7 @@ describe("InteractiveMode.showExtensionCustom", () => {
 			keybindings: {},
 			ui,
 			disposeActiveSelector: vi.fn(),
+			...extensionDialogState(),
 		};
 		const showExtensionCustom = <T>(
 			factory: (tui: TUI, theme: unknown, keybindings: unknown, done: (result: T) => void) => Component,
@@ -325,6 +335,7 @@ describe("InteractiveMode.showExtensionCustom", () => {
 				keybindings: {},
 				ui,
 				disposeActiveSelector: vi.fn(),
+				...extensionDialogState(),
 			};
 			const showExtensionCustom = <T>(
 				factory: (tui: TUI, theme: unknown, keybindings: unknown, done: (result: T) => void) => Component,
