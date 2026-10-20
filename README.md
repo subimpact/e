@@ -102,7 +102,7 @@ execution path it ever had was codemode, which does not exist in e.
 | Project config dir | `.pi/` (same as pi, stays shared) | `.pi/` |
 | Startup update check | Disabled (no pi.dev calls) | On |
 | Install footprint | One bundle, two runtime dependencies | Unbundled packages |
-| Upstream fixes | Cherry-picked daily; addons never flow back | Source |
+| Upstream fixes | Cherry-picked weekly; addons never flow back | Source |
 
 ## Attribution and licenses
 

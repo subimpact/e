@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.100.3] - 2026-10-20
+
 ### Changed
 
 - The default NVIDIA model is now `nvidia/nemotron-3.5-super-vl-120b-a12b` ([#10910](https://github.com/earendil-works/pi/pull/10910)) (upstream 95364a54e).
@@ -11,6 +13,7 @@
 
 - Compaction and branch summaries no longer fail with "generation hit the token cap" when reasoning uses most of a fixed summary output limit. Summaries now use the model's output limit, `compaction.reserveTokens` only controls when compaction starts, and `generateSummary()` / `generateSummaryWithUsage()` ignore their `reserveTokens` parameter ([#9512](https://github.com/earendil-works/pi/issues/9512), [#9075](https://github.com/earendil-works/pi/issues/9075)) (upstream 6fcb48670).
 - Anthropic requests no longer fail when the provider rejects the strict tool set (grammar too large, too many strict tools, union limits): e retries once with `strict: "prefer"` tools sent non-strict, keeping `strict: "require"` tools strict (upstream d4d53612b).
+- Provider fixes bundled from e's `ai` package: retry now triggers for gateway upstream failures (`upstream_error: Upstream request failed`, `upstream_stream_read_error`, `Upstream HTTP/2 stream failed`) and for transient network failures during Google Vertex OAuth token refresh (`request to ... failed`); whitespace-only tool output is sent as the empty-output placeholder to OpenAI Completions, OpenAI Responses and Google, which reject it with a 400. See `packages/ai/CHANGELOG.md`.
 
 ## [0.100.2] - 2026-10-16
 
