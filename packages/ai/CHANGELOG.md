@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.100.3] - 2026-10-20
+
 ### Fixed
 
 - Fixed automatic retry not triggering when the Google Vertex OAuth token refresh fails with a transient network error such as `request to https://oauth2.googleapis.com/token failed, reason:` ([#10996](https://github.com/earendil-works/pi/issues/10996)) (upstream 0fbdbd3f8).
