@@ -31,7 +31,7 @@ const initial: SystemMessage = {
 	role: "system",
 	content: "You are a helpful assistant.",
 	sections: { rules: "<rules>\nbe concise\n</rules>", project_context: "<project_context>\nv1\n</project_context>" },
-	toolsAdded: [{ name: "read", description: "Read a file", parameters: { type: "object", properties: {} } as never }],
+	tools: [{ name: "read", description: "Read a file", parameters: { type: "object", properties: {} } as never }],
 	timestamp: 1,
 };
 
@@ -39,10 +39,7 @@ const update: SystemMessage = {
 	role: "system",
 	content: [{ type: "text", text: "Extra instructions" }],
 	sections: { project_context: "<project_context>\nv2\n</project_context>", rules: null },
-	toolsAdded: [
-		{ name: "bash", description: "Run a command", parameters: { type: "object", properties: {} } as never },
-	],
-	toolsRemoved: [{ name: "read" }],
+	tools: [{ name: "bash", description: "Run a command", parameters: { type: "object", properties: {} } as never }],
 	timestamp: 2,
 };
 
@@ -64,7 +61,7 @@ describe("export HTML system messages", () => {
 		const helpers = loadSystemHelpers(entries);
 		expect(helpers.isLeadingSystemEntry(entries[0])).toBe(true);
 		expect(helpers.isLeadingSystemEntry(entries[2])).toBe(false);
-		expect(helpers.describeSystemUpdate(update)).toBe("instructions, project_context, -rules, tools +bash -read");
+		expect(helpers.describeSystemUpdate(update)).toBe("instructions, project_context, -rules, tools bash");
 	});
 
 	it("treats a compaction snapshot as earlier system state", () => {
@@ -78,6 +75,6 @@ describe("export HTML system messages", () => {
 	it("renders system entries in the transcript", () => {
 		expect(templateJs).toMatch(/if \(msg\.role === 'system'\) \{\s*let html = '';/);
 		expect(templateJs).toContain("renderSystemPromptBlock('System Prompt', text)");
-		expect(templateJs).toContain("renderToolsList('Available Tools', msg.toolsAdded)");
+		expect(templateJs).toContain("renderToolsList('Available Tools', msg.tools)");
 	});
 });

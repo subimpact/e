@@ -370,18 +370,14 @@
         return true;
       }
 
-      /** Short description of what a later system message changes, e.g. "project_context, -rules, tools +bash". */
+      /** Short description of what a later system message changes, e.g. "project_context, -rules, tools bash". */
       function describeSystemUpdate(msg) {
         const parts = [];
         if (systemContentText(msg.content).length > 0) parts.push('instructions');
         for (const [name, value] of Object.entries(msg.sections || {})) {
           parts.push(value === null ? `-${name}` : name);
         }
-        const toolChanges = [
-          ...(msg.toolsAdded || []).map(t => `+${t.name}`),
-          ...(msg.toolsRemoved || []).map(t => `-${t.name}`),
-        ];
-        if (toolChanges.length > 0) parts.push(`tools ${toolChanges.join(' ')}`);
+        if (msg.tools) parts.push(`tools ${msg.tools.map(t => t.name).join(' ')}`.trimEnd());
         return parts.join(', ');
       }
 
@@ -415,7 +411,7 @@
               parts.push(isLeadingSystemEntry(entry) ? 'system prompt' : 'system update');
               parts.push(getSystemMessageText(msg));
               for (const name of Object.keys(msg.sections || {})) parts.push(name);
-              for (const tool of [...(msg.toolsAdded || []), ...(msg.toolsRemoved || [])]) parts.push(tool.name);
+              for (const tool of msg.tools || []) parts.push(tool.name);
               break;
             }
             if (msg.content) parts.push(extractContent(msg.content));
@@ -1405,15 +1401,12 @@
             if (isLeadingSystemEntry(entry)) {
               const text = getSystemMessageText(msg);
               if (text) html += renderSystemPromptBlock('System Prompt', text);
-              html += renderToolsList('Available Tools', msg.toolsAdded);
+              html += renderToolsList('Available Tools', msg.tools);
             } else {
               const text = renderSystemMessageUpdate(msg);
               const changes = describeSystemUpdate(msg);
               if (text) html += renderSystemPromptBlock(`System Prompt Update${changes ? ': ' + changes : ''}`, text);
-              html += renderToolsList('Tools Added', msg.toolsAdded);
-              if (msg.toolsRemoved && msg.toolsRemoved.length > 0) {
-                html += `<div class="tools-list"><div class="tools-header">Tools Removed</div><div class="tools-content">${msg.toolsRemoved.map(t => `<div class="tool-item"><span class="tool-item-name">${escapeHtml(t.name)}</span></div>`).join('')}</div></div>`;
-              }
+              html += renderToolsList('Tools', msg.tools);
             }
             return html ? `<div class="system-entry" id="${entryDomId}">${tsHtml}${html}</div>` : '';
           }
