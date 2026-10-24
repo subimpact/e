@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { APP_NAME } from "../src/config.ts";
 import { AuthStorage } from "../src/core/auth-storage.ts";
 import { ExtensionRunner } from "../src/core/extensions/runner.ts";
 import { DefaultResourceLoader, loadProjectContextFiles } from "../src/core/resource-loader.ts";
@@ -103,7 +104,9 @@ describe("DefaultResourceLoader", () => {
 			expect(warnings).toHaveLength(1);
 			expect(warnings[0].path).toBe("npm:broken-package");
 			expect(warnings[0].warning).toMatch(/^failed to install \(.*failed with code 1\)\./);
-			expect(warnings[0].warning).toContain('Run "pi remove npm:broken-package" to remove it from settings.json.');
+			expect(warnings[0].warning).toContain(
+				`Run "${APP_NAME} remove npm:broken-package" to remove it from settings.json.`,
+			);
 		});
 
 		// #11088
@@ -124,7 +127,7 @@ describe("DefaultResourceLoader", () => {
 			expect(warnings).toHaveLength(1);
 			expect(warnings[0].path).toBe("npm:broken-package");
 			expect(warnings[0].warning).toContain("Check the source and try again.");
-			expect(warnings[0].warning).not.toContain("pi remove");
+			expect(warnings[0].warning).not.toContain(`${APP_NAME} remove`);
 		});
 
 		// #11088
@@ -146,7 +149,7 @@ describe("DefaultResourceLoader", () => {
 
 			const warnings = loader.getExtensions().warnings ?? [];
 			expect(warnings).toHaveLength(1);
-			expect(warnings[0].warning).toContain('Run "pi remove npm:broken-package --local"');
+			expect(warnings[0].warning).toContain(`Run "${APP_NAME} remove npm:broken-package --local"`);
 		});
 
 		// #11088
