@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Windows: shells resolve from installation directories and Windows Store aliases are accepted (upstream 61060ddf8, 28bea006b).
+- Managed install markers with a UTF-8 BOM are accepted, and managed `npm ci` no longer overrides `min-release-age` (upstream ea25697e9, 476a303c1).
+- Concurrent extension dialogs stack instead of replacing each other (upstream 38847563f, without the OSC 7501 program status).
+- Clipboard helpers run outside e's process group, so Ctrl+Z no longer stops them (upstream f8ab362cc).
+- The extension loader exposes `@earendil-works/pi-ai/models` (upstream 22dc6c26f).
+- `/compact` instructions apply to the split-turn prefix summary (upstream adfc14461).
+- The grep tool ignores ripgrep config files via `--no-config`; recovery omits tool results that belong to a truncated tool call (upstream 8c4e87389, 02726086d).
+- HTML export renders CJK emphasis, system messages (from e's tools list), and sessions deeper than the call stack (upstream 26293e74f, 9359adf0c, 1c720d285).
+- macOS shell groups are stopped before they are killed; `pi.exec` keeps spawn errors and decodes output across UTF-8 chunk boundaries (upstream 27cc6bfc0, c60de42e9, 36be9c612).
+- Fuzzy matching ranks contiguous matches first and searches session fields separately (upstream 8c03fef4d).
+- e starts when a configured package fails to install, and skips fd/rg downloads on unsupported architectures (upstream 6dfb54678, c8ec752cf).
+- Forked sessions are written through one file descriptor (upstream 8ddc44ec8).
+- TUI: terminal modes are restored on exit without `stop()`, unclosed display math no longer swallows Markdown tables, nested blockquotes no longer grow exponentially, fd queries escape regex metacharacters, fullscreen double-click uses iTerm2 word characters, boxed images scrolled above the fullscreen viewport are cropped, and Rex is detected for OSC 8 links and Kitty images (upstream 9df819de3, 2ed3118b0, 8a2ebd385, 612a172e6, ff6896471, 4464442f9, 1c8cb1781, 0ed1b0431, 396ecd7b8).
+
 ## [0.100.3] - 2026-10-20
 
 ### Changed

@@ -2,11 +2,21 @@
 
 ## [Unreleased]
 
-## [0.100.3] - 2026-10-20
-
 ### Changed
 
-- Grok 4.3 and Grok 4.5 on the `xai` provider now offer the `xhigh` thinking level, matching the reasoning efforts xAI supports for these models.
+- Grok 4.3 and Grok 4.5 on the `xai` provider now offer the `xhigh` thinking level (upstream fbc456d82).
+- Model catalog: added MiniMax-M3.1-Flash, dropped Codex models rejected for ChatGPT accounts and models retired upstream, and Kimi K3.1 Pro models now follow the Kimi K3 family rules (upstream d2e7d8b7c, fdce48eb4, e5fe9777b, 1de2d7ade).
+- Usage cost carries a `totalFromProvider` flag, and OpenRouter requests use the total cost OpenRouter reports (upstream 7c22a93d0, cae8d69e5).
+
+### Fixed
+
+- GitHub Copilot requests recover from request-size overflow errors (upstream 73f8de80b).
+- ChatGPT Business workspace usage limit errors are no longer retried and explain how to raise the limit (upstream cedefc532).
+- Retry now covers Codex CLI stream disconnects relayed by proxies, and retryable status codes match only as standalone numbers (upstream 29057ece3, 6e491cfa9).
+- Anthropic system updates are held past assistant messages that convert to no blocks, and per-message effort sends a fixed low top-level effort (upstream 3bc6eebac, e3bc05e87).
+- Gemini tool schemas send `const` as `enum` and keep literal data intact (upstream 7314819f0, a7b94a03f).
+
+## [0.100.3] - 2026-10-20
 
 ### Fixed
 
