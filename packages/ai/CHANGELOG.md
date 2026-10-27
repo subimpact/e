@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.100.4] - 2026-10-27
+
 ### Changed
 
 - Grok 4.3 and Grok 4.5 on the `xai` provider now offer the `xhigh` thinking level (upstream fbc456d82).

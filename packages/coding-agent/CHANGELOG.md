@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.100.4] - 2026-10-27
+
 ### Fixed
 
 - Windows: shells resolve from installation directories and Windows Store aliases are accepted (upstream 61060ddf8, 28bea006b).
@@ -17,6 +19,7 @@
 - e starts when a configured package fails to install, and skips fd/rg downloads on unsupported architectures (upstream 6dfb54678, c8ec752cf).
 - Forked sessions are written through one file descriptor (upstream 8ddc44ec8).
 - TUI: terminal modes are restored on exit without `stop()`, unclosed display math no longer swallows Markdown tables, nested blockquotes no longer grow exponentially, fd queries escape regex metacharacters, fullscreen double-click uses iTerm2 word characters, boxed images scrolled above the fullscreen viewport are cropped, and Rex is detected for OSC 8 links and Kitty images (upstream 9df819de3, 2ed3118b0, 8a2ebd385, 612a172e6, ff6896471, 4464442f9, 1c8cb1781, 0ed1b0431, 396ecd7b8).
+- Provider fixes bundled from e's `ai` package: GitHub Copilot recovers from request-size overflow; ChatGPT Business workspace usage limit errors are no longer retried; retry covers Codex CLI stream disconnects relayed by proxies and matches retryable status codes only as standalone numbers; Anthropic system updates are held past dropped assistant messages and per-message effort sends a fixed low top-level effort; Gemini tool schemas send `const` as `enum` and keep literal data; OpenRouter usage uses the provider-reported total cost; model catalog adds MiniMax-M3.1-Flash, drops retired models, and gives Grok 4.3 and 4.5 the `xhigh` thinking level. See `packages/ai/CHANGELOG.md`.
 
 ## [0.100.3] - 2026-10-20
 
