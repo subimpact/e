@@ -1493,8 +1493,12 @@ export class AgentSession {
 	}
 
 	private _setActiveTools(toolNames: string[]): void {
+		// The active tools are a set: tools that stay active keep their current order and newly active
+		// ones are appended, so reordering the same names does not change the prompt (#11495).
+		const requested = new Set(toolNames);
+		const kept = this.getActiveToolNames().filter((name) => requested.has(name));
 		const tools: AgentTool[] = [];
-		for (const name of [...new Set(toolNames)]) {
+		for (const name of [...new Set([...kept, ...requested])]) {
 			const tool = this._toolRegistry.get(name);
 			if (tool) tools.push(tool);
 		}
