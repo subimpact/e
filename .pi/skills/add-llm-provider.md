@@ -24,17 +24,19 @@ Create a provider file exporting:
 - Message/tool conversion functions.
 - Response parsing that emits standardized events (`text`, `tool_call`, `thinking`, `usage`, `stop`).
 
-## 3. Provider Exports and Lazy Registration
+## 3. Model Catalog (`packages/ai/catalog/providers/<id>.ts`)
 
-- Add a package subpath export in `packages/ai/package.json` pointing at `./dist/providers/<provider>.js`.
-- Add `export type` re-exports in `packages/ai/src/index.ts` for provider option types that should remain available from the root entry.
-- Register the provider in `packages/ai/src/providers/register-builtins.ts` via lazy loader wrappers; do not statically import provider implementation modules there.
-- Add credential detection in `packages/ai/src/env-api-keys.ts`.
+- Add a provider definition with `defineProvider()` and register it in `catalog/providers/index.ts`. Read `packages/ai/catalog/README.md` first.
+- For a models.dev provider, use `modelsDevModels()`; set compat defaults per API in `compat` and provider-specific behavior in `finalize`.
+- Regenerate with `npm run generate-models` in `packages/ai`. This writes the stable catalog wrapper `src/providers/<id>.models.ts` (exporting `<ID>_MODELS`) that the provider factory imports, and updates `src/models.generated.ts`.
 
-## 4. Model Generation (`packages/ai/scripts/generate-models.ts`)
+## 4. Provider Factory and Auth (`packages/ai/src/providers/`)
 
-- Add logic to fetch/parse models from the provider source.
-- Map to the standardized `Model` interface.
+- Create `src/providers/<id>.ts` exporting `<id>Provider()`, which calls `createProvider({ id, name, baseUrl, auth, models, api })`. `name` is the display name shown by `/login` and related UI. See `deepseek.ts` for a minimal example.
+- Auth: `envApiKeyAuth()` for standard API keys, a custom `ApiKeyAuth` for ambient credentials (AWS profiles, ADC), `lazyOAuth()` where an OAuth flow exists.
+- Pass the lazy API wrapper (e.g. `openAICompletionsApi()`) as `api`; do not statically import API implementation modules.
+- Register the factory in `src/providers/all.ts`.
+- Add the env var to `src/env-api-keys.ts` so the compat `getEnvApiKey()` finds it.
 
 ## 5. Tests (`packages/ai/test/`)
 

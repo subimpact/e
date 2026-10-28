@@ -1,5 +1,36 @@
-import type { ClassifierModel, ImageModel, Model, ModelCost, ModelCostTier } from "../src/types.ts";
-import { getOpenRouterThinkingLevelMap, type OpenRouterReasoningMetadata } from "./openrouter-reasoning-options.ts";
+import type {
+	ClassifierModel,
+	ImageModel,
+	Model,
+	ModelCost,
+	ModelCostTier,
+	ThinkingLevel,
+	ThinkingLevelMap,
+} from "../../src/types.ts";
+import { getEffortThinkingLevelMap } from "../reasoning.ts";
+
+const OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models";
+
+export interface OpenRouterReasoningMetadata {
+	mandatory?: boolean;
+	default_enabled?: boolean;
+	supported_efforts?: Array<ThinkingLevel | "none">;
+	default_effort?: ThinkingLevel | "none";
+}
+
+/** Convert OpenRouter's reasoning metadata into Pi model capabilities. */
+export function getOpenRouterThinkingLevelMap(
+	reasoning: OpenRouterReasoningMetadata | undefined,
+): ThinkingLevelMap | undefined {
+	if (!reasoning) return undefined;
+	if (!reasoning.supported_efforts?.length) return reasoning.mandatory === true ? { off: null } : undefined;
+
+	// OpenRouter's supported_efforts uses the same effort values as models.dev reasoning_options,
+	// so both sources can share the same Pi thinking-level conversion.
+	const map = getEffortThinkingLevelMap([{ type: "effort", values: reasoning.supported_efforts }]);
+	if (!map) return reasoning.mandatory === true ? { off: null } : undefined;
+	return { ...map, off: reasoning.mandatory === true ? null : "none" };
+}
 
 export interface OpenRouterModelListItem {
 	id: string;
@@ -171,4 +202,21 @@ export function buildOpenRouterCatalog(
 	}
 
 	return { chat, images, classifiers };
+}
+
+async function fetchOpenRouterList(query: string): Promise<OpenRouterModelListItem[]> {
+	const response = await fetch(`${OPENROUTER_MODELS_URL}${query}`);
+	if (!response.ok) throw new Error(`OpenRouter API returned ${response.status}`);
+	const data = (await response.json()) as { data?: OpenRouterModelListItem[] };
+	return data.data ?? [];
+}
+
+/** Fetch the tool-capable chat, image, and decision listings. */
+export async function fetchOpenRouterCatalog(): Promise<OpenRouterCatalog> {
+	const [listed, imageListed, decisionListed] = await Promise.all([
+		fetchOpenRouterList(""),
+		fetchOpenRouterList("?output_modalities=image"),
+		fetchOpenRouterList("?output_modalities=decisions"),
+	]);
+	return buildOpenRouterCatalog(listed, imageListed, decisionListed);
 }
