@@ -1689,6 +1689,44 @@ bar`,
 		});
 	});
 
+	// #10925
+	describe("styled words at the wrap boundary", () => {
+		it("should not start the next line with a space or carry styles into padding", () => {
+			const markdown = new Markdown("aaaa **bold** next ~~strk~~ more words", 1, 0, defaultMarkdownTheme, {
+				bgColor: (text) => `\x1b[44m${text}\x1b[49m`,
+			});
+
+			assert.deepStrictEqual(markdown.render(11), [
+				"\x1b[44m aaaa \x1b[1mbold\x1b[22m \x1b[49m",
+				"\x1b[44m next \x1b[9mstrk\x1b[29m \x1b[49m",
+				"\x1b[44m more      \x1b[49m",
+				"\x1b[44m words     \x1b[49m",
+			]);
+		});
+	});
+
+	// #10154
+	describe("CJK emphasis", () => {
+		const tagTheme: MarkdownTheme = {
+			...defaultMarkdownTheme,
+			bold: (text) => `<b>${text}</b>`,
+			italic: (text) => `<i>${text}</i>`,
+		};
+		const render = (text: string) => new Markdown(text, 0, 0, tagTheme).render(80).map((line) => line.trimEnd());
+
+		it("renders emphasis delimited next to CJK punctuation", () => {
+			assert.deepStrictEqual(render("**这是测试。**后面"), ["<b>这是测试。</b>后面"]);
+			assert.deepStrictEqual(render("**一句话说清：**一台机器"), ["<b>一句话说清：</b>一台机器"]);
+			assert.deepStrictEqual(render("**要点到此为止。**20 小时"), ["<b>要点到此为止。</b>20 小时"]);
+			assert.deepStrictEqual(render("字**「引用」**字"), ["字<b>「引用」</b>字"]);
+			assert.deepStrictEqual(render("*斜体。*后面"), ["<i>斜体。</i>后面"]);
+		});
+
+		it("keeps CommonMark flanking rules for non-CJK text", () => {
+			assert.deepStrictEqual(render("**end.**Then next"), ["**end.**Then next"]);
+		});
+	});
+
 	describe("Links", () => {
 		afterEach(() => {
 			resetCapabilitiesCache();
