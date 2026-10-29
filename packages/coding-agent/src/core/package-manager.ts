@@ -42,10 +42,11 @@ import { CONFIG_DIR_NAME, readAppEnv } from "../config.ts";
 import { spawnProcess, spawnProcessSync } from "../utils/child-process.ts";
 import { type GitSource, parseGitUrl } from "../utils/git.ts";
 import {
-	canonicalizePath,
+	getPathComparisonKey,
 	isLocalPath,
 	markPathIgnoredByCloudSync,
 	normalizePath,
+	pathsEqual,
 	resolvePath,
 } from "../utils/paths.ts";
 import { stripBom } from "../utils/text.ts";
@@ -53,7 +54,7 @@ import { collectExtensionSourceFiles, formatCompatWarning, scanExtensionFiles } 
 import { isStdoutTakenOver } from "./output-guard.ts";
 import { type PiManifest, readPiManifest } from "./pi-manifest.ts";
 import type { PackageSource, SettingsManager } from "./settings-manager.ts";
-import { BUILTIN_PATH_PREFIX } from "./source-info.ts";
+import { BUILTIN_PATH_PREFIX, getResourcePathKey } from "./source-info.ts";
 
 const NETWORK_TIMEOUT_MS = 10000;
 const UPDATE_CHECK_CONCURRENCY = 4;
@@ -1527,7 +1528,7 @@ export class DefaultPackageManager implements PackageManager {
 		if (parsed.type === "git") {
 			return `git:${parsed.host}/${parsed.path}`;
 		}
-		return `local:${this.resolvePath(parsed.path)}`;
+		return `local:${getPathComparisonKey(this.resolvePath(parsed.path))}`;
 	}
 
 	private getSourceMatchKeyForSettings(source: string, scope: SourceScope): string {
@@ -1539,7 +1540,7 @@ export class DefaultPackageManager implements PackageManager {
 			return `git:${parsed.host}/${parsed.path}`;
 		}
 		const baseDir = this.getBaseDirForScope(scope);
-		return `local:${this.resolvePathFromBase(parsed.path, baseDir)}`;
+		return `local:${getPathComparisonKey(this.resolvePathFromBase(parsed.path, baseDir))}`;
 	}
 
 	private buildNoMatchingPackageMessage(source: string, configuredPackages: PackageSource[]): string {
@@ -1844,9 +1845,9 @@ export class DefaultPackageManager implements PackageManager {
 		}
 		if (scope) {
 			const baseDir = this.getBaseDirForScope(scope);
-			return `local:${this.resolvePathFromBase(parsed.path, baseDir)}`;
+			return `local:${getPathComparisonKey(this.resolvePathFromBase(parsed.path, baseDir))}`;
 		}
-		return `local:${this.resolvePath(parsed.path)}`;
+		return `local:${getPathComparisonKey(this.resolvePath(parsed.path))}`;
 	}
 
 	/**
@@ -2589,7 +2590,7 @@ export class DefaultPackageManager implements PackageManager {
 		const userAgentsSkillsDir = join(getHomeDir(), ".agents", "skills");
 		const projectTrusted = this.settingsManager.isProjectTrusted();
 		const projectAgentsSkillDirs = projectTrusted
-			? collectAncestorAgentsSkillDirs(this.cwd).filter((dir) => resolve(dir) !== resolve(userAgentsSkillsDir))
+			? collectAncestorAgentsSkillDirs(this.cwd).filter((dir) => !pathsEqual(dir, userAgentsSkillsDir))
 			: [];
 
 		const addResources = (
@@ -2778,9 +2779,9 @@ export class DefaultPackageManager implements PackageManager {
 
 			const seen = new Set<string>();
 			return resolved.filter((entry) => {
-				const canonicalPath = canonicalizePath(entry.path);
-				if (seen.has(canonicalPath)) return false;
-				seen.add(canonicalPath);
+				const pathKey = getResourcePathKey(entry.path);
+				if (seen.has(pathKey)) return false;
+				seen.add(pathKey);
 				return true;
 			});
 		};
