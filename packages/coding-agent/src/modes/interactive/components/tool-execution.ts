@@ -35,7 +35,7 @@ export interface ToolRenderers {
 import { formatToolCallWithArgs, getTextOutput as getRenderedTextOutput } from "../../../core/tools/render-utils.ts";
 import { ensurePngTranscoder } from "../../../utils/image-convert.ts";
 import { theme } from "../theme/theme.ts";
-import { keyHint } from "./keybinding-hints.ts";
+import { keyHint, keyText } from "./keybinding-hints.ts";
 
 const FALLBACK_PREVIEW_LINES = 10;
 
@@ -151,6 +151,8 @@ export class ToolExecutionComponent extends Container {
 			showImages: this.showImages,
 			isError: this.result?.isError ?? false,
 			outputPad: this.outputPad,
+			keyText,
+			keyHint,
 		};
 	}
 
