@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Added
+
+- Added GPT-6.1 Terra (upstream 363ad78bf).
+
+### Fixed
+
+- Fixed OpenCode requests to use protocol-specific endpoints (upstream #11434).
+- Bedrock retries strict tool limit rejections once with preferred-strict tools non-strict (upstream 842c73170).
+- LiteLLM `ContextWindowExceededError` is detected as context overflow (upstream #11494).
+- OpenRouter `~anthropic` latest aliases use Anthropic Messages (upstream 44f6851b7).
+- Zhipu usage limit errors (code 1308) are no longer retried (upstream #11572).
+- OAuth flows only follow trusted web URLs, and streamed data is handled defensively (upstream 89c921d8b).
+- Removed unused root bedrock-provider shims (upstream 531340f10).
+
 ## [0.100.4] - 2026-10-27
 
 ### Changed

@@ -4,6 +4,15 @@
 
 ### Fixed
 
+- Recognised kitty F1 to F12 sequences and ignored F13 and above (upstream #11468).
+- Display math wider than the content width falls back to raw LaTeX (upstream #11487).
+- Bare URLs stop at CJK punctuation (upstream #10934).
+- OSC 133 prompt markers are no longer written in regular mode (upstream #11565).
+- ESC+Return with native Shift held is treated as Shift+Enter (upstream 86dc686cf).
+- A styled word at a wrap boundary no longer leaves a leading space, and strikethrough resets at line end (upstream #11591).
+- Orca terminals are detected as Kitty-image capable (upstream #9329).
+- Control characters in the terminal title are replaced (upstream 89c921d8b).
+- Selection page keys work in all scrolling lists (upstream 3bae85274).
 - Fixed unhandled wheel input over a focused overlay not scrolling the transcript underneath (upstream 11f991145).
 
 ### Added

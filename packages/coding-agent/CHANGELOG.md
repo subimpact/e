@@ -2,6 +2,39 @@
 
 ## [Unreleased]
 
+### Changed
+
+- The `openai` provider now defaults to `gpt-6.1-sol` (upstream #11467).
+- undici updated to 8.12.3 for security advisories (upstream 66c2fa3d7).
+
+### Fixed
+
+- Fixed the npm prefix when the agent dir is a symlink (upstream #11396).
+- Fixed `provider/id` model references when the provider id contains a slash (upstream #11397).
+- Fixed grep context lines drifting from ripgrep when a file has a lone CR (upstream #11465).
+- Fixed an open extension dialog disappearing when the editor component is replaced (upstream #11466).
+- Package installs no longer print npm audit and fund output (upstream #11469).
+- Hidden thinking with an empty label now renders no rows (upstream #11470).
+- Branch summarization now receives the thinking level (upstream #11482).
+- Session memory stays in line with the file when a write fails (upstream #11486).
+- A deleted working directory is reported instead of crashing on startup (upstream #11511).
+- Setting the same active tools in another order no longer changes the system prompt (upstream #11514).
+- Selection page keys work in all scrolling lists (upstream 3bae85274).
+- `stripAnsi` strips private-parameter CSI sequences (upstream b5fc6dc84).
+- `pi.exec` output is capped at 256 MiB (upstream #11546).
+- Summaries let the SDK stream resolve auth (upstream #11556).
+- Skill diagnostics are labelled `[Skill warnings]` (upstream #11566).
+- An npm package update that leaves the installed version unchanged now warns (upstream #11571).
+- Image resizing picks the smaller of PNG and JPEG (upstream #11577).
+- A saved "do not trust" decision is honoured for projects without trust-requiring resources (upstream 31ade0e0d).
+- Temporary `-e` npm extensions and branch-pinned git sources refresh when newer versions exist (upstream cd6a8f7f3, bec60c54b).
+- Paths compare case-insensitively on Windows (upstream #11588).
+- `e update` names the package manager only when it owns the install (upstream #11628).
+- WSL interop helpers start from `/` and external editor failures are reported (upstream #11627).
+- Extension renderers receive the host keybinding hints (upstream #11630).
+- Git package updates continue when `git clean` fails (upstream #11648).
+- The login dialog only opens and links web URLs and replaces control characters in untrusted URLs (upstream 89c921d8b).
+
 ## [0.100.4] - 2026-10-27
 
 ### Fixed
