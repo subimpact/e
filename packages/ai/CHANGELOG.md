@@ -10,6 +10,7 @@
 
 ### Fixed
 
+- OpenCode Go and Zen Claude models that accept per-message effort now send `thinking.block_binding: drop_block`, so replayed thinking is accepted after the tool list or system prompt changes (upstream 9ee7586a9).
 - Providers whose model catalog comes from another source (the pi.dev remote catalog) no longer refresh the provider's OAuth token during a catalog refresh (upstream 6382d8706).
 - Google adapters accept a custom fetch and always pass one to @google/genai, so the global dispatcher's idle timeouts apply; @google/genai updated to 2.32.0 with its automatic continuation turned off, so a CONTINUATION finish ends the turn with stop reason length (upstream #12103, #12108; ported without the client identity refactor e does not carry).
 - Fireworks tests no longer reference the removed Nemotron model (upstream 647a197fc, c8d1a826a).
