@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.100.5] - 2026-11-03
+
 ### Changed
 
 - The `openai` provider now defaults to `gpt-6.1-sol` (upstream #11467).
@@ -34,6 +36,8 @@
 - Extension renderers receive the host keybinding hints (upstream #11630).
 - Git package updates continue when `git clean` fails (upstream #11648).
 - The login dialog only opens and links web URLs and replaces control characters in untrusted URLs (upstream 89c921d8b).
+- TUI: kitty F1 to F12 sequences are recognised and F13 and above ignored, display math wider than the content falls back to raw LaTeX, bare URLs stop at CJK punctuation, OSC 133 prompt markers are no longer written in regular mode, ESC+Return with native Shift held is treated as Shift+Enter, a styled word at a wrap boundary no longer leaves a leading space and strikethrough resets at line end, Orca terminals get Kitty images, and control characters in the terminal title are replaced (upstream #11468, #11487, #10934, #11565, 86dc686cf, #11591, #9329, 89c921d8b).
+- Provider fixes bundled from e's `ai` package: GPT-6.1 Terra added; OpenCode requests use protocol-specific endpoints; Bedrock retries strict tool limit rejections once with preferred-strict tools sent non-strict; LiteLLM `ContextWindowExceededError` is detected as context overflow; OpenRouter `~anthropic` latest aliases use Anthropic Messages; Zhipu usage limit errors (code 1308) are no longer retried; OAuth flows only follow trusted web URLs and streamed data is handled defensively. See `packages/ai/CHANGELOG.md`.
 
 ## [0.100.4] - 2026-10-27
 

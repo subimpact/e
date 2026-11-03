@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.100.5] - 2026-11-03
+
 ### Added
 
 - Added GPT-6.1 Terra (upstream 363ad78bf).
