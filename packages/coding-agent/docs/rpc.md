@@ -90,7 +90,7 @@ Clients must also handle child-process startup failures, unexpected exits, stder
 
 ## Shutdown
 
-Close the child's stdin to request an orderly shutdown. Pi disposes the active runtime before exiting. Clients should still handle process signals and unexpected exits.
+Close the child's stdin to request an orderly shutdown. Pi disposes the active runtime and waits for pending work to finish before exiting, so give it time to exit before killing it. Clients should still handle process signals and unexpected exits.
 
 An extension can also request shutdown through its extension context. Pi completes shutdown after the current command or after the active run emits `agent_settled`.
 
