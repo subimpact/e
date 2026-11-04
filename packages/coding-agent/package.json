@@ -75,7 +75,7 @@
 		"chalk": "6.0.0",
 		"cross-spawn": "7.0.6",
 		"diff": "8.0.4",
-		"grok-mermaid": "0.2.3",
+		"lovely-mermaid": "0.3.3",
 		"highlight.js": "10.7.3",
 		"hosted-git-info": "9.0.3",
 		"ignore": "7.0.8",
