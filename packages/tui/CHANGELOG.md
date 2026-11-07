@@ -13,6 +13,10 @@
 - Orca terminals are detected as Kitty-image capable (upstream #9329).
 - Control characters in the terminal title are replaced (upstream 89c921d8b).
 - Selection page keys work in all scrolling lists (upstream 3bae85274).
+- HTML comments are hidden in Markdown rendering (upstream #11755).
+- Alacritty is detected for OSC 8 hyperlinks without TERM_PROGRAM (upstream #11777).
+- Cursor markers no longer leak (upstream #9441).
+- Fullscreen Kitty images are drawn after the rows they cover on every terminal (upstream #11890).
 - Fixed unhandled wheel input over a focused overlay not scrolling the transcript underneath (upstream 11f991145).
 
 ### Added

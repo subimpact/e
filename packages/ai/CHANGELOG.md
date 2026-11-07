@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Anthropic non-strict tool schemas keep root $defs (upstream 4a6a58eb5).
+- OpenRouter max token clamping leaves room for input overcount (upstream #11712).
+- The Codex SSE retry abort listener is removed after backoff (upstream #11725).
+- Aborted stop reason is preserved during lazy setup (upstream #8635).
+- OpenAI Responses sends session-id instead of session_id (upstream #11793).
+- Streams cut short after the reply had begun are retried (upstream #11885).
+- Claude Sonnet 5 is marked as not supporting temperature, and Azure Foundry GPT-6 models use the 1.05M context window (upstream #7961, #11781).
+- The OpenAI Codex provider name drops its "(legacy)" marker (upstream 36142c1c7).
+
 ## [0.100.5] - 2026-11-03
 
 ### Added

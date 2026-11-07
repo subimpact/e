@@ -2,6 +2,39 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Provider default models move to newer models at the same or a lower price; the Anthropic default is Claude Opus 5.5 (upstream b425754a2, d84123b32).
+- Consecutive cache warming notices merge into one line (upstream a013448fb).
+
+### Fixed
+
+- Branch summary input applies context edits (upstream #11680).
+- RPC mode processes idle ctx.shutdown() requests, and a started RPC or print shutdown finishes; only a repeated signal forces exit (upstream #11746, #11752).
+- The last seen changelog version ignores a prerelease suffix (upstream #11753).
+- The startup benchmark disposes the session runtime (upstream #11736).
+- grep takes context lines from ripgrep and matches globs relative to path (upstream #11705, #11895).
+- find and ls limit edge cases (upstream #11747).
+- The read tool streams files instead of loading them whole (upstream #11750).
+- edit keeps the line endings of untouched lines and diffs only around changes (upstream #11751).
+- bash reports the shell exit code when it times out after the shell exited (upstream #11813).
+- llama.cpp errors name the server and the cause (upstream #11779).
+- ctrl+v stays a paste key on Windows and WSL (upstream #11780).
+- Images in queued steering and follow-up messages are resized, and delivered image-only queue entries are cleared (upstream #11782, #8612).
+- The auth.json lock is shared across symlinked paths, and a started OAuth refresh is saved before exit (upstream #11787, #11812).
+- e config loads user keybindings (upstream #11788).
+- Selector window height is limited, the session tree search cursor renders, and diffs keep indentation (upstream #11072, #9157, #9274).
+- Discarded user bash output is tracked, and ctrl+o applies to user bash output shown while the agent works (upstream #10165, #11886).
+- /reload is rejected while running or compacting, and tool results settle before disposal (upstream #9222, #9126).
+- .dart, .nix and .groovy files are highlighted in read and write views (upstream #11790).
+- Extension entries are realpathed before import (upstream #8112).
+- Prompt and tree navigation no longer overlap, and pasted text survives editor restoration (upstream #9155, #10146).
+- Text truncation does not split surrogate pairs (upstream #11757).
+- The model selector keeps its selection when the catalog refresh lands, and cycling picks the only model in scope (upstream #11810, 5732bac06).
+- Prompt template arguments keep apostrophes (upstream #11873).
+- The live thinking level is recorded on the branch before each prompt (upstream #11888).
+- The image resize worker termination is awaited (upstream 1f7c685b8).
+
 ## [0.100.5] - 2026-11-03
 
 ### Changed
