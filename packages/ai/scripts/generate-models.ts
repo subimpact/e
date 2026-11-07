@@ -645,8 +645,8 @@ function isAnthropicTemperatureUnsupportedModel(modelId: string): boolean {
 		id.includes("opus-4.8") ||
 		id.includes("opus-5") ||
 		id.includes("opus.5") ||
-		id.includes("sonnet-5-5") ||
-		id.includes("sonnet-5.5") ||
+		id.includes("sonnet-5") ||
+		id.includes("sonnet.5") ||
 		id.includes("haiku-5-5") ||
 		id.includes("haiku-5.5")
 	);
@@ -3240,6 +3240,11 @@ async function generateModels() {
 		"gpt-5.6-luna": 1050000,
 		"gpt-5.6-sol": 1050000,
 		"gpt-5.6-terra": 1050000,
+		"gpt-6-astra": 1050000,
+		"gpt-6-luna": 1050000,
+		"gpt-6-sol": 1050000,
+		"gpt-6.1-sol": 1050000,
+		"gpt-6.1-terra": 1050000,
 	};
 	const azureOpenAiModels: Model<Api>[] = allModels
 		.filter((model) => model.provider === "openai" && model.api === "openai-responses")
