@@ -10,6 +10,7 @@
 
 ### Fixed
 
+- Claude Fable 5.2 (`claude-fable-5-2`) is available from the `anthropic` provider, with Opus 5 as its server-side refusal fallback; Fable and Mythos 5.2 keep per-message effort and accept system messages mid-conversation (upstream 0d1793c2b).
 - Azure OpenAI models keep OpenAI's long-context price tier, so requests above 272K input tokens are costed at the long-context rates (upstream ea1cfcc4c).
 - OpenCode Go and Zen Claude models that accept per-message effort now send `thinking.block_binding: drop_block`, so replayed thinking is accepted after the tool list or system prompt changes (upstream 9ee7586a9).
 - Providers whose model catalog comes from another source (the pi.dev remote catalog) no longer refresh the provider's OAuth token during a catalog refresh (upstream 6382d8706).
@@ -20,7 +21,6 @@
 - Strict tool limit rejections are remembered per session (upstream 45344bd3a).
 - Non-strict Anthropic tool schemas keep root additionalProperties (upstream #12100).
 - Provider errors reading "Connection closed." or reporting only a Node socket error code are retried (upstream #12093, #12136).
-
 
 ## [0.100.6] - 2026-11-10
 
