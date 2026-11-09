@@ -16,7 +16,7 @@ const CONTEXT_WINDOW_OVERRIDES: Record<string, number> = {
 	"gpt-6.1-terra": 1050000,
 };
 
-/** OpenAI models as Azure deploys them. Azure bills without OpenAI's long-context tier. */
+/** OpenAI models as Azure deploys them, including OpenAI's long-context price tier above 272K input tokens. */
 function openAiModels(models: ChatModel[]): ChatModel[] {
 	return models
 		.filter((model) => model.api === "openai-responses")
@@ -25,12 +25,6 @@ function openAiModels(models: ChatModel[]): ChatModel[] {
 			api: "azure-openai-responses",
 			provider: "azure-openai-responses",
 			baseUrl: "",
-			cost: {
-				input: model.cost.input,
-				output: model.cost.output,
-				cacheRead: model.cost.cacheRead,
-				cacheWrite: model.cost.cacheWrite,
-			},
 			contextWindow: CONTEXT_WINDOW_OVERRIDES[model.id] ?? model.contextWindow,
 		}));
 }
