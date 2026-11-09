@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- When a session's folder no longer exists, the prompt now also offers to fork the session into the current folder (new session ID, original kept), so later resumes stop asking (upstream #11975).
 - The powershell tool reports native exit codes on Windows PowerShell 5.1 (upstream #11964).
 - Restored the deprecated grep readFile hook (upstream 244e5f5db).
 - find: Windows path patterns match with every fd version, fd no longer starts after an abort, a leading ./ is ignored, and path patterns are anchored at the search path (upstream #11972, #11974, #12044, #12116).
