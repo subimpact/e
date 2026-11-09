@@ -60,13 +60,17 @@ import {
 
 import {
 	getJsonSchemaToolParameters,
-	isStrictToolLimitErrorMessage,
 	prefersJsonSchemaStrictSampling,
 	resolveJsonSchemaStrictSampling,
 	type UnsupportedStrictSchemaKeywordCheck,
 } from "./constrained-sampling.ts";
 import { buildCopilotDynamicHeaders, hasCopilotVisionInput } from "./github-copilot-headers.ts";
 import { adjustMaxTokensForThinking, buildBaseOptions, clampMaxTokensToContext } from "./simple-options.ts";
+import {
+	hasExceededStrictToolLimits,
+	isStrictToolLimitErrorMessage,
+	markStrictToolLimitsExceeded,
+} from "./strict-tool-limits.ts";
 import { splitErrorToolResultImages, transformMessages } from "./transform-messages.ts";
 
 /**
@@ -634,7 +638,7 @@ export const stream: StreamFunction<"anthropic-messages", AnthropicOptions> = (
 				...(options?.timeoutMs !== undefined ? { timeout: options.timeoutMs } : {}),
 				maxRetries: 0,
 			};
-			let disablePreferredStrictTools = false;
+			let disablePreferredStrictTools = hasExceededStrictToolLimits(options?.sessionId);
 			let response: Response;
 			for (;;) {
 				options?.signal?.throwIfAborted();
@@ -669,6 +673,7 @@ export const stream: StreamFunction<"anthropic-messages", AnthropicOptions> = (
 						throw error;
 					}
 					disablePreferredStrictTools = true;
+					markStrictToolLimitsExceeded(options?.sessionId);
 					appendAssistantMessageDiagnostic(output, {
 						type: "anthropic_strict_tools_fallback",
 						timestamp: Date.now(),
