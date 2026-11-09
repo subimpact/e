@@ -9,6 +9,7 @@ import {
 	writeFileSync,
 } from "node:fs";
 import { delimiter, dirname, join, resolve } from "node:path";
+import { ModelsError } from "@earendil-works/pi-ai";
 import { Markdown, type MarkdownTheme } from "@earendil-works/pi-tui";
 import chalk from "chalk";
 import lockfile from "proper-lockfile";
@@ -638,9 +639,21 @@ async function refreshModelCatalogs(agentDir: string): Promise<void> {
 		if (result.aborted) {
 			throw new Error("Model catalog refresh timed out.");
 		}
-		if (result.errors.size > 0) {
-			const details = Array.from(result.errors, ([provider, error]) => `${provider}: ${error.message}`).join("; ");
-			throw new Error(`Could not refresh model catalogs: ${details}`);
+		const failures: string[] = [];
+		for (const [provider, error] of result.errors) {
+			// A stale login only affects that provider's catalog; the others are still worth refreshing.
+			if (error instanceof ModelsError && error.code === "oauth") {
+				console.warn(
+					chalk.yellow(
+						`Warning: skipped model catalog for ${provider}: ${error.message}\nStart ${APP_NAME} and run /login ${provider} to sign in again, then retry.`,
+					),
+				);
+			} else {
+				failures.push(`${provider}: ${error.message}`);
+			}
+		}
+		if (failures.length > 0) {
+			throw new Error(`Could not refresh model catalogs: ${failures.join("; ")}`);
 		}
 	} finally {
 		clearTimeout(timeout);

@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- `e update --models` warns and carries on when a provider's login has expired, pointing you to /login, instead of failing the whole refresh; other refresh errors still fail (upstream 6382d8706, ported to point at /login because e has no `auth login` command).
 - When a session's folder no longer exists, the prompt now also offers to fork the session into the current folder (new session ID, original kept), so later resumes stop asking (upstream #11975).
 - The powershell tool reports native exit codes on Windows PowerShell 5.1 (upstream #11964).
 - Restored the deprecated grep readFile hook (upstream 244e5f5db).
