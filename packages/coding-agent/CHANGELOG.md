@@ -2,13 +2,19 @@
 
 ## [Unreleased]
 
+### Added
+
+- `e update` lists each package it updated with the npm version or git commit change, for example `npm:foo 1.2.0 -> 1.3.0`. It says `Packages are already up to date` only when the update ran without warnings, and says when offline mode skipped the check. `PackageManager.update()` reports each change as a `result` progress event (upstream #11707, #11711).
+
 ### Changed
 
+- Mermaid diagrams render with lovely-mermaid 0.3.3, the successor of grok-mermaid by the same author (upstream #8158).
 - Provider default models move to newer models at the same or a lower price; the Anthropic default is Claude Opus 5.5 (upstream b425754a2, d84123b32).
 - Consecutive cache warming notices merge into one line (upstream a013448fb).
 
 ### Fixed
 
+- Bold and italic next to CJK punctuation render as emphasis instead of literal asterisks (upstream #10730).
 - Branch summary input applies context edits (upstream #11680).
 - RPC mode processes idle ctx.shutdown() requests, and a started RPC or print shutdown finishes; only a repeated signal forces exit (upstream #11746, #11752).
 - The last seen changelog version ignores a prerelease suffix (upstream #11753).
