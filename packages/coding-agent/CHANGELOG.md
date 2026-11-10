@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.100.6] - 2026-11-10
+
 ### Added
 
 - `e update` lists each package it updated with the npm version or git commit change, for example `npm:foo 1.2.0 -> 1.3.0`. It says `Packages are already up to date` only when the update ran without warnings, and says when offline mode skipped the check. `PackageManager.update()` reports each change as a `result` progress event (upstream #11707, #11711).
@@ -40,6 +42,8 @@
 - Prompt template arguments keep apostrophes (upstream #11873).
 - The live thinking level is recorded on the branch before each prompt (upstream #11888).
 - The image resize worker termination is awaited (upstream 1f7c685b8).
+- TUI: HTML comments are hidden in Markdown, Alacritty is detected for OSC 8 hyperlinks without TERM_PROGRAM, cursor markers no longer leak, and fullscreen Kitty images are drawn after the rows they cover on every terminal (upstream #11755, #11777, #9441, #11890).
+- Provider fixes bundled from e's `ai` package: Anthropic non-strict tool schemas keep root $defs; OpenRouter max token clamping leaves room for input overcount; streams cut short after the reply had begun are retried; OpenAI Responses sends session-id; the Codex SSE retry abort listener is removed after backoff; the aborted stop reason survives lazy setup; Claude Sonnet 5 is marked as not supporting temperature and Azure Foundry GPT-6 models use the 1.05M context window; the OpenAI Codex provider name drops its "(legacy)" marker. See `packages/ai/CHANGELOG.md`.
 
 ## [0.100.5] - 2026-11-03
 

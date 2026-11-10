@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.100.6] - 2026-11-10
+
 ### Fixed
 
 - Anthropic non-strict tool schemas keep root $defs (upstream 4a6a58eb5).
