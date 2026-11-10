@@ -402,11 +402,12 @@ if (process.platform !== "win32") fs.chmodSync(ePath, 0o755);
 	it("does not report packages as up to date when npm left an older version installed", async () => {
 		prepareStaleNpmPackage("1.2.0", "1.3.0");
 		const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
-		const stdoutSpy = vi.spyOn(process.stdout, "write").mockImplementation(() => true);
+		// e prints update warnings on stderr (upstream prints them on stdout).
+		const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
 
 		await expect(main(["update", "--extensions"])).resolves.toBeUndefined();
 
-		const progress = stdoutSpy.mock.calls.map(([chunk]) => String(chunk)).join("");
+		const progress = stderrSpy.mock.calls.map(([chunk]) => String(chunk)).join("");
 		const stdout = logSpy.mock.calls.map(([message]) => String(message)).join("\n");
 		expect(progress).toContain("npm:fake-package is still 1.2.0 (registry reports 1.3.0)");
 		expect(stdout).toContain("No packages were updated, see the warnings above");
@@ -415,8 +416,11 @@ if (process.platform !== "win32") fs.chmodSync(ePath, 0o755);
 
 	it("does not report packages as up to date in offline mode", async () => {
 		prepareStaleNpmPackage("1.2.0", "1.3.0");
-		// main() writes both variables in offline mode; stubbing them lets afterEach restore them.
+		// main() writes both variables under the E_ and legacy PI_ names in offline mode; stubbing all four lets
+		// afterEach restore them so later tests do not inherit offline mode.
+		vi.stubEnv("E_OFFLINE", "1");
 		vi.stubEnv("PI_OFFLINE", "1");
+		vi.stubEnv("E_SKIP_VERSION_CHECK", "1");
 		vi.stubEnv("PI_SKIP_VERSION_CHECK", "1");
 		const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
