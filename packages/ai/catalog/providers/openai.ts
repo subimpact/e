@@ -1,4 +1,4 @@
-import type { ClassifierModel, Model } from "../../src/types.ts";
+import type { Model } from "../../src/types.ts";
 import {
 	addMissing,
 	type ChatModel,
@@ -65,27 +65,6 @@ const GPT_5_CHAT_LATEST: Model<"openai-responses"> = {
 	maxTokens: 16384,
 };
 
-// OpenAI Decisions API (public beta): gpt-6-luna is its only model. It bills input tokens only,
-// with the same long-context multiplier as chat requests. Only API keys work: Sign in with ChatGPT
-// tokens are rejected on /v1/decisions, and the Codex backend has no Decisions route.
-// The endpoint rejects inputs above 922K tokens (the model's documented maximum input), but
-// requests running longer than about five seconds, currently above roughly 600K input tokens,
-// fail with a gateway timeout.
-// https://developers.openai.com/api/docs/guides/decisions
-const CLASSIFIER_MODELS: ClassifierModel<"openai-decisions">[] = [
-	{
-		type: "classifier",
-		id: "gpt-6-luna",
-		name: "GPT-6 Luna",
-		api: "openai-decisions",
-		provider: "openai",
-		baseUrl: BASE_URL,
-		input: ["text", "image"],
-		cost: withOpenAiLongContextPricing({ input: 0.1, output: 0, cacheRead: 0, cacheWrite: 0 }),
-		contextWindow: 922000,
-	},
-];
-
 function correctUpstream(model: ChatModel): ChatModel {
 	if (SHORT_CONTEXT_CAPPED_MODEL_IDS.has(model.id)) {
 		model.contextWindow = OPENAI_LONG_CONTEXT_INPUT_THRESHOLD;
@@ -114,7 +93,6 @@ export default defineProvider({
 			}),
 			[GPT_5_CHAT_LATEST],
 		),
-	classifiers: () => CLASSIFIER_MODELS,
 	finalize: (model) => {
 		if (model.api !== "openai-responses") return;
 		const responsesModel = model as Model<"openai-responses">;

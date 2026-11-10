@@ -1,5 +1,5 @@
 import type { Model } from "../../src/types.ts";
-import { defineProvider, mergeCompat, mergeThinking } from "../define.ts";
+import { defineProvider, mergeThinking } from "../define.ts";
 import {
 	enableOpenAiGrammarTools,
 	enableOpenAiMidConvoSystemMessages,
