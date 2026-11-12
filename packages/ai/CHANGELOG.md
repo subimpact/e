@@ -10,6 +10,7 @@
 
 ### Fixed
 
+- Qwen Token Plan providers use the current QwenCloud and Qianwen AI gateways, per-plan API key variables, and the current Team and Personal model lists (upstream 139707002).
 - Claude Fable 5.2 (`claude-fable-5-2`) is available from the `anthropic` provider, with Opus 5 as its server-side refusal fallback; Fable and Mythos 5.2 keep per-message effort and accept system messages mid-conversation (upstream 0d1793c2b).
 - Azure OpenAI models keep OpenAI's long-context price tier, so requests above 272K input tokens are costed at the long-context rates (upstream ea1cfcc4c).
 - OpenCode Go and Zen Claude models that accept per-message effort now send `thinking.block_binding: drop_block`, so replayed thinking is accepted after the tool list or system prompt changes (upstream 9ee7586a9).
