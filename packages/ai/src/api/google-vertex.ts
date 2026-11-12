@@ -10,6 +10,7 @@ import { calculateCost, clampThinkingLevel } from "../models.ts";
 import type {
 	Api,
 	AssistantMessage,
+	FetchFunction,
 	Model,
 	ProviderEnv,
 	ProviderHeaders,
@@ -93,14 +94,18 @@ export const stream: StreamFunction<"google-vertex", GoogleVertexOptions> = (
 		};
 
 		try {
-			if (options?.fetch && options.fetch !== globalThis.fetch) {
-				throw new Error("Custom fetch is not supported by the Google Vertex adapter");
-			}
 			const apiKey = resolveApiKey(options);
 			// Create the client using either a Vertex API key, if provided, or ADC with project and location
 			const client = apiKey
-				? createClientWithApiKey(model, apiKey, options?.headers)
-				: createClient(model, resolveProject(options), resolveLocation(options), options?.headers, options?.env);
+				? createClientWithApiKey(model, apiKey, options?.headers, options?.fetch)
+				: createClient(
+						model,
+						resolveProject(options),
+						resolveLocation(options),
+						options?.headers,
+						options?.env,
+						options?.fetch,
+					);
 			let params = buildParams(model, normalizedContext, options);
 			const nextParams = await options?.onPayload?.(params, model);
 			if (nextParams !== undefined) {
@@ -360,6 +365,7 @@ function createClient(
 	location: string,
 	optionsHeaders?: ProviderHeaders,
 	env?: ProviderEnv,
+	fetch?: FetchFunction,
 ): GoogleGenAI {
 	const googleAuthOptions = buildGoogleAuthOptions(env);
 	return new GoogleGenAI({
@@ -368,7 +374,7 @@ function createClient(
 		location,
 		apiVersion: API_VERSION,
 		...(googleAuthOptions ? { googleAuthOptions } : {}),
-		httpOptions: buildHttpOptions(model, optionsHeaders),
+		httpOptions: buildHttpOptions(model, optionsHeaders, fetch),
 	});
 }
 
@@ -376,17 +382,24 @@ function createClientWithApiKey(
 	model: Model<"google-vertex">,
 	apiKey: string,
 	optionsHeaders?: ProviderHeaders,
+	fetch?: FetchFunction,
 ): GoogleGenAI {
 	return new GoogleGenAI({
 		vertexai: true,
 		apiKey,
 		apiVersion: API_VERSION,
-		httpOptions: buildHttpOptions(model, optionsHeaders),
+		httpOptions: buildHttpOptions(model, optionsHeaders, fetch),
 	});
 }
 
-function buildHttpOptions(model: Model<"google-vertex">, optionsHeaders?: ProviderHeaders): HttpOptions | undefined {
-	const httpOptions: HttpOptions = {};
+function buildHttpOptions(
+	model: Model<"google-vertex">,
+	optionsHeaders?: ProviderHeaders,
+	fetch?: FetchFunction,
+): HttpOptions {
+	// Always pass fetch: without one, @google/genai adds a per-request dispatcher that disables
+	// undici's header and body timeouts, bypassing the idle timeouts of the global dispatcher.
+	const httpOptions: HttpOptions = { fetch: fetch ?? globalThis.fetch };
 	const baseUrl = resolveCustomBaseUrl(model.baseUrl);
 	if (baseUrl) {
 		httpOptions.baseUrl = baseUrl;
@@ -401,7 +414,7 @@ function buildHttpOptions(model: Model<"google-vertex">, optionsHeaders?: Provid
 		httpOptions.headers = headers;
 	}
 
-	return Object.keys(httpOptions).length > 0 ? httpOptions : undefined;
+	return httpOptions;
 }
 
 function resolveCustomBaseUrl(baseUrl: string): string | undefined {
@@ -491,6 +504,9 @@ function buildParams(
 		...(functionCallingMode !== undefined && {
 			toolConfig: { functionCallingConfig: { mode: functionCallingMode } },
 		}),
+		// Off for now, until we have evaluated the implications of the SDK's automatic continuation
+		// (extra requests and stream resumes inside the SDK). A CONTINUATION finish ends the turn as "length".
+		automaticContinuation: false,
 	};
 
 	if (options.thinking?.enabled && model.reasoning) {
