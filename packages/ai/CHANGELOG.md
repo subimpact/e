@@ -10,6 +10,7 @@
 
 ### Fixed
 
+- Together's Kimi K3 and Kimi K3.1 Pro keep the 131072 output token limit when models.dev reports the 1M context window as the output limit, matching the existing OpenRouter and Vercel AI Gateway caps.
 - Qwen Token Plan providers use the current QwenCloud and Qianwen AI gateways, per-plan API key variables, and the current Team and Personal model lists (upstream 139707002).
 - Claude Fable 5.2 (`claude-fable-5-2`) is available from the `anthropic` provider, with Opus 5 as its server-side refusal fallback; Fable and Mythos 5.2 keep per-message effort and accept system messages mid-conversation (upstream 0d1793c2b).
 - Azure OpenAI models keep OpenAI's long-context price tier, so requests above 272K input tokens are costed at the long-context rates (upstream ea1cfcc4c).
