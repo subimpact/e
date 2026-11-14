@@ -29,6 +29,22 @@ function model(id: string): Model<"openai-completions"> {
 	};
 }
 
+function builtinProvider(): Provider {
+	return createProvider({
+		id: "test-provider",
+		auth: { apiKey: { name: "Test", resolve: async () => ({ auth: {} }) } },
+		models: [model("static")],
+		api: {
+			stream: () => {
+				throw new Error("not used");
+			},
+			streamSimple: () => {
+				throw new Error("not used");
+			},
+		},
+	});
+}
+
 function testProvider(localGeneratedAt?: number) {
 	return withRemoteCatalog(
 		createProvider({
