@@ -1,7 +1,6 @@
 import {
 	createModels,
 	createProvider,
-	type ImageModel,
 	InMemoryCredentialStore,
 	InMemoryModelsStore,
 	type Model,

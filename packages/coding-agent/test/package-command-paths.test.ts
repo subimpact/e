@@ -550,7 +550,10 @@ if (process.platform !== "win32") fs.chmodSync(ePath, 0o755);
 
 	it("warns about a stale provider login during update --models and keeps the refresh successful", async () => {
 		const errors = new Map<string, Error>([
-			["openai-codex", new ModelsError("oauth", "OAuth refresh failed for openai-codex", { cause: new Error("invalid_grant") })],
+			[
+				"openai-codex",
+				new ModelsError("oauth", "OAuth refresh failed for openai-codex", { cause: new Error("invalid_grant") }),
+			],
 		]);
 		const refresh = vi.fn(async () => ({ aborted: false, errors }));
 		vi.spyOn(ModelRuntime, "create").mockResolvedValue({ refresh } as unknown as ModelRuntime);
@@ -561,7 +564,9 @@ if (process.platform !== "win32") fs.chmodSync(ePath, 0o755);
 		await expect(runPackageCommandDirectly(["update", "--models"])).resolves.toBeUndefined();
 
 		const warnings = warnSpy.mock.calls.map(([message]) => String(message)).join("\n");
-		expect(warnings).toContain("skipped model catalog for openai-codex: OAuth refresh failed for openai-codex: invalid_grant");
+		expect(warnings).toContain(
+			"skipped model catalog for openai-codex: OAuth refresh failed for openai-codex: invalid_grant",
+		);
 		expect(warnings).toContain("/login openai-codex");
 		expect(logSpy.mock.calls.map(([message]) => String(message)).join("\n")).toContain("Model catalogs refreshed");
 		expect(errorSpy).not.toHaveBeenCalled();
