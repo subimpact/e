@@ -18,6 +18,9 @@
 - Cursor markers no longer leak (upstream #9441).
 - Fullscreen Kitty images are drawn after the rows they cover on every terminal (upstream #11890).
 - Fixed unhandled wheel input over a focused overlay not scrolling the transcript underneath (upstream 11f991145).
+- Short paste markers stay intact when renumbering after backspace (upstream #11947).
+- Kitty images survive fullscreen full redraws (upstream #12047).
+- Terminal images covered by overlays are hidden (upstream #12109).
 
 ### Added
 

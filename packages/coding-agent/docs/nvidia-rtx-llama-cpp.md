@@ -82,11 +82,7 @@ spec-draft-backend-sampling = true
 Open PowerShell in the llama.cpp folder and run:
 
 ```powershell
-<<<<<<< HEAD
 .\llama.exe serve --models-preset qwen3.8-27b.ini --host 127.0.0.1
-=======
-.\llama-server.exe --models-preset qwen3.8-27b.ini --host 127.0.0.1
->>>>>>> b3c2e4a6b (fix llama.cpp default port (#12001))
 ```
 
 If the recipe requires a Hugging Face token, set `$env:HF_TOKEN` in the same PowerShell window before starting the router. On its first start, the router downloads the model files.

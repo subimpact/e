@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- The powershell tool reports native exit codes on Windows PowerShell 5.1 (upstream #11964).
+- Restored the deprecated grep readFile hook (upstream 244e5f5db).
+- find: Windows path patterns match with every fd version, fd no longer starts after an abort, a leading ./ is ignored, and path patterns are anchored at the search path (upstream #11972, #11974, #12044, #12116).
+- No crash when an aborted signal destroys an unwatched file stream (upstream #12025).
+- The llama extension defaults to port 9931 and the docs use the unified llama entry point (upstream #12001, #11958, #12004).
+- Managed updates are verified with the Node.js running e (upstream #12051).
+- bash keeps output when the tail is one over-long line (upstream #12092).
+- Signal-terminated exec commands are reported as failed (upstream #12089).
+- /resume keeps its selection while the session list reloads progressively (upstream #12111).
+- Model scope warnings are reported as startup diagnostics (upstream #11973).
+- /copy skips turns that ended without an answer (upstream #12121).
+- No crash when rendering very large self-rendered tool results (upstream #12145).
+- Standalone binaries resolve extension dependencies via package.json main and exports (upstream 4cfea9786).
+
+
 ## [0.100.6] - 2026-11-10
 
 ### Added

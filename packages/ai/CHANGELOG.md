@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Fireworks tests no longer reference the removed Nemotron model (upstream 647a197fc, c8d1a826a).
+- Reported Claude Code version updated (upstream a05e3a077).
+- Strict tool schemas with untyped nodes fall back to non-strict schemas (upstream 406e719a6).
+- Strict tool limit rejections are remembered per session (upstream 45344bd3a).
+- Non-strict Anthropic tool schemas keep root additionalProperties (upstream #12100).
+- Provider errors reading "Connection closed." or reporting only a Node socket error code are retried (upstream #12093, #12136).
+
+
 ## [0.100.6] - 2026-11-10
 
 ### Fixed
