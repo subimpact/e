@@ -966,6 +966,8 @@ export interface BedrockCompat {
 export interface MistralConversationsCompat {
 	/** Whether the exact model accepts system messages after the conversation has started. When false, later system messages are folded into the leading system message. Default: false. */
 	supportsMidConvoSystemMessages?: boolean;
+	/** Whether the model supports strict (schema-constrained) function tools. Default: false. */
+	supportsStrictMode?: boolean;
 }
 
 /**

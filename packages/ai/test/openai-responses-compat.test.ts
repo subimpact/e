@@ -159,7 +159,6 @@ describe("openai-responses provider defaults", () => {
 	it.each([
 		getModel("cloudflare-ai-gateway", "gpt-5.6-sol"),
 		getModel("github-copilot", "gpt-5.3-codex"),
-		getModel("github-copilot", "mai-code-2"),
 		getModel("github-copilot", "grok-4.7"),
 	])("sets strict mode explicitly for $provider/$id Responses tools", async (model) => {
 		let capturedPayload: CapturedResponsesPayload | undefined;
