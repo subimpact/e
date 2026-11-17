@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.100.7] - 2026-11-17
+
 ### Fixed
 
 - Providers whose model catalog comes from another source (the pi.dev remote catalog) no longer refresh the provider's OAuth token during a catalog refresh (upstream 6382d8706).

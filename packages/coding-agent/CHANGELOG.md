@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+## [0.100.7] - 2026-11-17
+
+
 ### Fixed
 
 - `e update --models` warns and carries on when a provider's login has expired, pointing you to /login, instead of failing the whole refresh; other refresh errors still fail (upstream 6382d8706, ported to point at /login because e has no `auth login` command).
@@ -19,7 +22,8 @@
 - /copy skips turns that ended without an answer (upstream #12121).
 - No crash when rendering very large self-rendered tool results (upstream #12145).
 - Standalone binaries resolve extension dependencies via package.json main and exports (upstream 4cfea9786).
-
+- TUI: short paste markers stay intact when renumbering after backspace, Kitty images survive fullscreen full redraws, and terminal images covered by overlays are hidden (upstream #11947, #12047, #12109).
+- Provider fixes bundled from e's `ai` package: Google adapters pass a custom fetch to @google/genai (now 2.32.0) so the global dispatcher's idle timeouts apply, and a CONTINUATION finish ends the turn with stop reason length; strict tool schemas with untyped nodes fall back to non-strict schemas and strict tool limit rejections are remembered per session; non-strict Anthropic tool schemas keep root additionalProperties; provider errors reading "Connection closed." or reporting only a Node socket error code are retried; catalog-sourced providers no longer refresh OAuth tokens during a catalog refresh; the reported Claude Code version is updated. See `packages/ai/CHANGELOG.md`.
 
 ## [0.100.6] - 2026-11-10
 
