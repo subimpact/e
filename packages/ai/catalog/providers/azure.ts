@@ -14,6 +14,8 @@ const CONTEXT_WINDOW_OVERRIDES: Record<string, number> = {
 	"gpt-6-sol": 1050000,
 	"gpt-6.1-sol": 1050000,
 	"gpt-6.1-terra": 1050000,
+	"gpt-6.2-astra": 1050000,
+	"gpt-6.2-sol": 1050000,
 };
 
 /** OpenAI models as Azure deploys them, including OpenAI's long-context price tier above 272K input tokens. */
