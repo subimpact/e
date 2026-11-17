@@ -6,8 +6,6 @@
 
 - The built-in model catalog is generated from models.dev's v2 catalog, and its per-provider rules moved from `scripts/generate-models.ts` into one TypeScript definition per provider under `catalog/`. Models that models.dev types as realtime or image models (`gpt-realtime-2.1`, `gemini-3.1-flash-live-preview`, `gemini-3.1-flash-lite-image`) are no longer offered as chat models, and models.dev's newer OpenAI and Google chat models (`chat-latest`, `gpt-5.6-cyber`, `gemini-robotics-er-2-preview`) are now included
 
-## [0.100.7] - 2026-11-17
-
 ### Fixed
 
 - Together's Kimi K3 and Kimi K3.1 Pro keep the 131072 output token limit when models.dev reports the 1M context window as the output limit, matching the existing OpenRouter and Vercel AI Gateway caps.
@@ -15,6 +13,11 @@
 - Claude Fable 5.2 (`claude-fable-5-2`) is available from the `anthropic` provider, with Opus 5 as its server-side refusal fallback; Fable and Mythos 5.2 keep per-message effort and accept system messages mid-conversation (upstream 0d1793c2b).
 - Azure OpenAI models keep OpenAI's long-context price tier, so requests above 272K input tokens are costed at the long-context rates (upstream ea1cfcc4c).
 - OpenCode Go and Zen Claude models that accept per-message effort now send `thinking.block_binding: drop_block`, so replayed thinking is accepted after the tool list or system prompt changes (upstream 9ee7586a9).
+
+## [0.100.7] - 2026-11-17
+
+### Fixed
+
 - Providers whose model catalog comes from another source (the pi.dev remote catalog) no longer refresh the provider's OAuth token during a catalog refresh (upstream 6382d8706).
 - Google adapters accept a custom fetch and always pass one to @google/genai, so the global dispatcher's idle timeouts apply; @google/genai updated to 2.32.0 with its automatic continuation turned off, so a CONTINUATION finish ends the turn with stop reason length (upstream #12103, #12108; ported without the client identity refactor e does not carry).
 - Fireworks tests no longer reference the removed Nemotron model (upstream 647a197fc, c8d1a826a).
@@ -23,6 +26,7 @@
 - Strict tool limit rejections are remembered per session (upstream 45344bd3a).
 - Non-strict Anthropic tool schemas keep root additionalProperties (upstream #12100).
 - Provider errors reading "Connection closed." or reporting only a Node socket error code are retried (upstream #12093, #12136).
+
 
 ## [0.100.6] - 2026-11-10
 
