@@ -144,4 +144,24 @@ describe("OAuthSelectorComponent", () => {
 
 		expect(stripAnsi(selector.render(120).join("\n"))).toContain("✓ command in models.json");
 	});
+
+	it("selects the best match after typing a query, even after scrolling", () => {
+		const providers = ["Anthropic", "Google", "Groq", "Mistral", "OpenAI", "OpenCode Go", "OpenCode Zen", "xAI"].map(
+			(name) => ({ id: name.toLowerCase().replace(" ", "-"), name, authType: "api_key" as const }),
+		);
+		const selected: string[] = [];
+		const selector = new OAuthSelectorComponent(
+			"login",
+			providers,
+			(providerId) => selected.push(providerId),
+			() => {},
+		);
+
+		for (let i = 0; i < 5; i++) selector.handleInput("\x1b[B");
+		for (const char of "openai") selector.handleInput(char);
+
+		expect(stripAnsi(selector.render(120).join("\n"))).toContain("→ OpenAI");
+		selector.handleInput("\r");
+		expect(selected).toEqual(["openai"]);
+	});
 });
