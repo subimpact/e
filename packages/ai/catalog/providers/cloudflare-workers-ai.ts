@@ -31,7 +31,6 @@ export default defineProvider({
 	compat: {
 		"openai-completions": {
 			supportsStore: false,
-			supportsDeveloperRole: false,
 			supportsStrictMode: true,
 			supportsLongCacheRetention: false,
 		},
