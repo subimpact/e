@@ -962,6 +962,12 @@ export interface BedrockCompat {
 	supportsStrictMode?: boolean;
 }
 
+/** Compatibility settings for the Google Generative AI and Vertex APIs. */
+export interface GoogleCompat {
+	/** Whether the model enforces strict tools through Gemini's VALIDATED function-calling mode. Default: true for model IDs containing gemini-3 or a later version, false otherwise. Set true for Gemini 3+ models served under IDs without the version. */
+	supportsStrictMode?: boolean;
+}
+
 /** Compatibility settings for the Mistral chat API. */
 export interface MistralConversationsCompat {
 	/** Whether the exact model accepts system messages after the conversation has started. When false, later system messages are folded into the leading system message. Default: false. */
@@ -1144,7 +1150,9 @@ export interface Model<TApi extends Api> extends BaseModel<TApi> {
 					? BedrockCompat
 					: TApi extends "mistral-conversations"
 						? MistralConversationsCompat
-						: never;
+						: TApi extends "google-generative-ai" | "google-vertex"
+							? GoogleCompat
+							: never;
 }
 
 /** Image-generation model: usable with `generateImages()` only. */
