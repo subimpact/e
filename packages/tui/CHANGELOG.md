@@ -21,6 +21,9 @@
 - Short paste markers stay intact when renumbering after backspace (upstream #11947).
 - Kitty images survive fullscreen full redraws (upstream #12047).
 - Terminal images covered by overlays are hidden (upstream #12109).
+- Enter on a Tab menu for an absolute path no longer submits (upstream #12312).
+- The SIGTSTP listener stays tied to terminal ownership (upstream #12339).
+- Repeated prompts move to the front of editor history instead of duplicating (upstream #12370).
 
 ### Added
 

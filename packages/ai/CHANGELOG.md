@@ -14,6 +14,18 @@
 - Azure OpenAI models keep OpenAI's long-context price tier, so requests above 272K input tokens are costed at the long-context rates (upstream ea1cfcc4c).
 - OpenCode Go and Zen Claude models that accept per-message effort now send `thinking.block_binding: drop_block`, so replayed thinking is accepted after the tool list or system prompt changes (upstream 9ee7586a9).
 
+- Mistral tools are sent non-strict unless `compat.supportsStrictMode` is set, since strict tools can stall Mistral Large 4 (upstream 2c2a77f9f).
+- The Codex websocket recovers from the 60-minute connection limit (upstream #12229).
+- GPT-6.2 Astra and GPT-6.2 Sol are available from `openai`, `openai-codex` and `azure-openai-responses`, with Codex context windows of 272K (Astra) and 500K (Sol); GPT-6.2 Sol is the default for those providers (upstream e56d35ce5, cead615b4, without the carved additional tools and mid-conversation effort lists).
+- Added `qwen4-max-preview` to the Qwen Token Plan Individual models (upstream #12313).
+- GitHub Copilot sends `strict` explicitly on Responses tools, and sends strict tools to its Claude models (upstream #12329, #12332).
+- The Codex system prompt goes into a leading developer item instead of top-level `instructions`, so GPT-6.2 turns hit the prompt cache (ported from upstream edfe6b2ef without the tool-addition machinery).
+- openai-completions sends instructions with the `system` role by default; only api.openai.com keeps `developer` (upstream #12134).
+- Abort listeners are removed after retry backoff (upstream #12348).
+- Cloudflare 525 errors, gateway provider-unavailable and partial-response errors and more temporary provider failures are retried (upstream fb62c069b, #12352, a00a5048d).
+- `createProvider` merges the model catalog once per publish instead of on every read (upstream #12366).
+- Bedrock SSO credentials resolve through `HTTPS_PROXY` (upstream #12365).
+- Gemini 3+ detection works for prefixed Google model IDs, and `compat.supportsStrictMode` overrides it (upstream #12371).
 ## [0.100.7] - 2026-11-17
 
 ### Fixed

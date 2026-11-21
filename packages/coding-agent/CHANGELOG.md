@@ -10,6 +10,24 @@
 
 - Qwen Token Plan providers now use the current gateways (`token-plan.maas.qwencloudapi.com` international, `token-plan.maas.qianwenaiapi.com` China), and `qwen-token-plan` and `qwen-token-plan-cn` are named "Qwen Token Plan Team" and "Qwen Token Plan Team CN". Provider IDs are unchanged, and the old `aliyuncs.com` hosts still work ([#11773](https://github.com/earendil-works/pi/issues/11773))
 
+### Fixed
+
+- Diagnostics that appear on session replacement are reported (upstream #12115).
+- `session_start` is emitted once on RPC session replacement, streamed in JSON print mode, and emitted on reload after `bindExtensions({})` (upstream #12230, #12232, #12231).
+- Model fallback is reported after `/resume` and in every mode (upstream #12234).
+- `pi.events` handler errors are reported like other extension errors (upstream #12233).
+- Two remaining direct terminal writes were removed (upstream #12117).
+- git and npm output is captured while the interactive TUI runs (upstream #12236).
+- The resume command prints on its own line on exit, so a triple-click selects it (upstream #12237).
+- `/login` and `/logout` search selects the best match, and cursor keys in selector search keep the selection (upstream #12246, #12334).
+- stdout is flushed before exit after the TUI stops, and an external SIGTSTP is handled like Ctrl+Z (upstream #12336, #12283).
+- Tool preview text stays readable across terminal themes (upstream #12347).
+- The editor repaints after extension `pasteToEditor` and `setEditorText` (upstream #12349).
+- Bash output shows the end of an over-long line that is followed by a blank line (upstream #12355).
+- Sessions with very many entries after the last compaction load again (upstream #12360).
+- Shutdown cleanup runs when the Windows console closes (upstream #11889).
+- Updated undici to 8.12.4 for security advisories (upstream efbcd5adb).
+
 ### Removed
 
 - Removed the retired `deepseek-v3.2` and `deepseek-v4-flash` from the Qwen Token Plan Team providers; use `deepseek-v4-flash-0731` or `deepseek-v4.1-flash` ([#11773](https://github.com/earendil-works/pi/issues/11773))
