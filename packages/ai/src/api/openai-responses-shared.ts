@@ -16,6 +16,8 @@ import type {
 	Api,
 	AssistantMessage,
 	ImageContent,
+	JsonObject,
+	JsonValue,
 	Model,
 	StopReason,
 	StreamOptions,
@@ -27,6 +29,7 @@ import type {
 	TranscriptContext,
 	Usage,
 } from "../types.ts";
+import { appendAssistantMessageDiagnostic } from "../utils/diagnostics.ts";
 import type { AssistantMessageEventStream } from "../utils/event-stream.ts";
 import { shortHash } from "../utils/hash.ts";
 import { parseStreamingJson, parseToolCallArguments } from "../utils/json-parse.ts";
@@ -508,6 +511,7 @@ export async function processResponsesStream<TApi extends Api>(
 	): void => {
 		sawTerminalResponseEvent = true;
 		backfillReasoningSignatures(response.output ?? []);
+		appendReasoningRemovals(output, (response as { input_transformations?: unknown }).input_transformations);
 		if (response?.id) {
 			output.responseId = response.id;
 		}
@@ -728,6 +732,52 @@ export async function processResponsesStream<TApi extends Api>(
 			}
 		}
 	}
+}
+
+/**
+ * One entry of a terminal response's `input_transformations`. The pinned `openai` SDK predates the field,
+ * so it is read as unvalidated wire data.
+ */
+interface ResponseInputTransformation {
+	type?: unknown;
+	id?: unknown;
+	action?: unknown;
+	reason?: unknown;
+}
+
+/**
+ * Record the replayed reasoning items the API withheld from the model, with the reason for each.
+ * From GPT-6.2 on, OpenAI removes reasoning that follows an edit of earlier input (`prefix_mismatch`)
+ * and reasoning created under another organization, end user, or model. A removal is reported again
+ * on every later request that replays the item.
+ *
+ * `turn_boundary` removals are left out: models that use only current-turn reasoning (all models
+ * before GPT-5.6) report every earlier turn's reasoning item on every request. That is their normal
+ * behavior, and storing it would grow the session quadratically with the conversation.
+ */
+function appendReasoningRemovals(output: AssistantMessage, transformations: unknown): void {
+	// Wire input: older servers and proxies omit the field, and Codex tolerates malformed entries too.
+	if (!Array.isArray(transformations)) return;
+	const removals = transformations.filter((transformation): transformation is ResponseInputTransformation => {
+		if (typeof transformation !== "object" || transformation === null) return false;
+		const { type, action, reason } = transformation as ResponseInputTransformation;
+		return type === "reasoning" && action === "removed" && reason !== "turn_boundary";
+	});
+	if (removals.length === 0) return;
+	appendAssistantMessageDiagnostic(output, {
+		type: "openai_input_transformations",
+		timestamp: Date.now(),
+		details: {
+			// Unvalidated wire data, so each field is copied as received; absent fields are omitted.
+			transformations: removals.map(({ type, id, action, reason }) => {
+				const entry: JsonObject = {};
+				for (const [key, value] of Object.entries({ type, id, action, reason })) {
+					if (value !== undefined) entry[key] = value as JsonValue;
+				}
+				return entry;
+			}),
+		},
+	});
 }
 
 function mapStopReason(

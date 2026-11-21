@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Added `openai_input_transformations` assistant message diagnostics to the OpenAI Responses, Azure OpenAI Responses, and OpenAI Codex providers. They list the replayed reasoning items the API withheld from the model and why, such as `prefix_mismatch` or `organization_mismatch`. `turn_boundary` removals are not recorded (upstream 03de604b8, ported without the openai 7.59.0 bump)
+
 ### Changed
 
 - The built-in model catalog is generated from models.dev's v2 catalog, and its per-provider rules moved from `scripts/generate-models.ts` into one TypeScript definition per provider under `catalog/`. Models that models.dev types as realtime or image models (`gpt-realtime-2.1`, `gemini-3.1-flash-live-preview`, `gemini-3.1-flash-lite-image`) are no longer offered as chat models, and models.dev's newer OpenAI and Google chat models (`chat-latest`, `gpt-5.6-cyber`, `gemini-robotics-er-2-preview`) are now included
