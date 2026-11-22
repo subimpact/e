@@ -274,6 +274,7 @@ describe("constrained tool sampling", () => {
 			call_id: "call_1",
 			name: "sample_tool",
 			input: "abc",
+			status: "completed",
 		});
 		expect(messages).toContainEqual({
 			type: "custom_tool_call_output",
