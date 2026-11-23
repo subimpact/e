@@ -1,6 +1,5 @@
 import type { Model } from "../../src/types.ts";
 import {
-	addMissing,
 	type ChatModel,
 	defineProvider,
 	mergeCompat,
@@ -53,19 +52,6 @@ const NONE_REASONING_MODEL_IDS = new Set([
 	"gpt-6-sol",
 	"gpt-6-luna",
 ]);
-// Not listed by models.dev.
-const GPT_5_CHAT_LATEST: Model<"openai-responses"> = {
-	id: "gpt-5-chat-latest",
-	name: "GPT-5 Chat Latest",
-	api: "openai-responses",
-	baseUrl: BASE_URL,
-	provider: "openai",
-	reasoning: false,
-	input: ["text", "image"],
-	cost: { input: 1.25, output: 10, cacheRead: 0.125, cacheWrite: 0 },
-	contextWindow: 128000,
-	maxTokens: 16384,
-};
 
 function correctUpstream(model: ChatModel): ChatModel {
 	if (SHORT_CONTEXT_CAPPED_MODEL_IDS.has(model.id)) {
@@ -83,18 +69,17 @@ function correctUpstream(model: ChatModel): ChatModel {
 
 export default defineProvider({
 	id: "openai",
+	// No skipDeprecated: models.dev marks models deprecated once OpenAI announces their shutdown,
+	// and they keep working until then. Shut down models leave models.dev's list.
 	models: (ctx) =>
-		addMissing(
-			modelsDevModels(ctx, "openai", {
-				api: "openai-responses",
-				baseUrl: BASE_URL,
-				// Audio models are only served on Chat Completions.
-				protocol: "responses",
-				include: (source) => !UNSUPPORTED_MODEL_IDS.has(source.id),
-				map: correctUpstream,
-			}),
-			[GPT_5_CHAT_LATEST],
-		),
+		modelsDevModels(ctx, "openai", {
+			api: "openai-responses",
+			baseUrl: BASE_URL,
+			// Audio models are only served on Chat Completions.
+			protocol: "responses",
+			include: (source) => !UNSUPPORTED_MODEL_IDS.has(source.id),
+			map: correctUpstream,
+		}),
 	finalize: (model) => {
 		if (model.api !== "openai-responses") return;
 		const responsesModel = model as Model<"openai-responses">;
