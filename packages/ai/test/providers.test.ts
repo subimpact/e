@@ -187,8 +187,8 @@ describe("builtin providers", () => {
 			["opencode", "claude-opus-5"],
 			["opencode", "kimi-k3"],
 			["opencode-go", "kimi-k3"],
-			["github-copilot", "gpt-5.6-terra"],
-			["github-copilot", "claude-opus-5"],
+			["github-copilot", "gpt-6.1-terra"],
+			["github-copilot", "claude-opus-5.5"],
 			["github-copilot", "claude-opus-4.8"],
 			["github-copilot", "kimi-k3"],
 			["deepseek", "deepseek-v4-pro"],
@@ -225,15 +225,18 @@ describe("builtin providers", () => {
 		const models = builtinModels();
 		for (const [provider, modelId] of [
 			["opencode", "gpt-5.6-terra"],
-			["github-copilot", "gpt-5.6-terra"],
+			["github-copilot", "gpt-6.1-terra"],
 		] as const) {
 			// Proxies pass mid-conversation system messages through to OpenAI; the tool list stays top-level.
 			expect(models.getModel(provider, modelId)?.compat, `${provider}/${modelId}`).toMatchObject({
 				supportsMidConvoSystemMessages: true,
 			});
 		}
-		for (const provider of ["opencode", "github-copilot"] as const) {
-			expect(models.getModel(provider, "claude-opus-5")?.compat, provider).toMatchObject({
+		for (const [provider, modelId] of [
+			["opencode", "claude-opus-5"],
+			["github-copilot", "claude-opus-5.5"],
+		] as const) {
+			expect(models.getModel(provider, modelId)?.compat, `${provider}/${modelId}`).toMatchObject({
 				supportsMidConvoSystemMessages: true,
 			});
 		}
