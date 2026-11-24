@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.100.8] - 2026-11-24
+
 ### Added
 
 - Added `deepseek-v4.1-flash` and `deepseek-v4.1-flash-1017` to the Qwen Token Plan Individual providers, and per-plan key variables `QWEN_TOKEN_PLAN_TEAM_API_KEY`, `QWEN_TOKEN_PLAN_TEAM_CN_API_KEY`, `QWEN_TOKEN_PLAN_INDIVIDUAL_API_KEY`, and `QWEN_TOKEN_PLAN_INDIVIDUAL_CN_API_KEY`; the shared `QWEN_TOKEN_PLAN_API_KEY` and `QWEN_TOKEN_PLAN_CN_API_KEY` still work ([#11773](https://github.com/earendil-works/pi/issues/11773))
@@ -10,6 +12,7 @@
 ### Changed
 
 - Qwen Token Plan providers now use the current gateways (`token-plan.maas.qwencloudapi.com` international, `token-plan.maas.qianwenaiapi.com` China), and `qwen-token-plan` and `qwen-token-plan-cn` are named "Qwen Token Plan Team" and "Qwen Token Plan Team CN". Provider IDs are unchanged, and the old `aliyuncs.com` hosts still work ([#11773](https://github.com/earendil-works/pi/issues/11773))
+- The `openai`, `openai-codex` and `azure-openai-responses` providers default to GPT-6.2 Sol (upstream e56d35ce5).
 
 ### Fixed
 
@@ -28,6 +31,8 @@
 - Sessions with very many entries after the last compaction load again (upstream #12360).
 - Shutdown cleanup runs when the Windows console closes (upstream #11889).
 - Updated undici to 8.12.4 for security advisories (upstream efbcd5adb).
+- TUI: Enter on a Tab menu for an absolute path no longer submits, the SIGTSTP listener stays tied to terminal ownership, repeated prompts move to the front of editor history instead of duplicating, and column slicing skips grapheme segmentation for characters that always stand alone, so fullscreen scroll frames are faster (upstream #12312, #12339, #12370, part of #11968).
+- Provider fixes bundled from e's `ai` package: Claude Fable 5.2 and GPT-6.2 Astra and Sol are available, with Codex context windows of 272K and 500K; the built-in catalog is generated from models.dev's v2 catalog, so realtime and image models are no longer offered as chat models; the Codex system prompt goes into a leading developer item so GPT-6.2 turns hit the prompt cache, and the Codex websocket recovers from its 60-minute connection limit; openai-completions sends instructions with the `system` role by default; Mistral tools are sent non-strict unless `compat.supportsStrictMode` is set, and GitHub Copilot sends strict tools explicitly; Cloudflare 525, gateway provider-unavailable, partial-response and more temporary provider failures are retried; Bedrock SSO credentials resolve through `HTTPS_PROXY`; Gemini 3+ detection works for prefixed Google model IDs; Azure OpenAI models keep the long-context price tier; OpenCode Go and Zen Claude models send `drop_block`; Together Kimi K3 keeps its 131072 output token cap. See `packages/ai/CHANGELOG.md`.
 
 ### Removed
 

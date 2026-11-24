@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.100.8] - 2026-11-24
+
 ### Added
 
 - Added `openai_input_transformations` assistant message diagnostics to the OpenAI Responses, Azure OpenAI Responses, and OpenAI Codex providers. They list the replayed reasoning items the API withheld from the model and why, such as `prefix_mismatch` or `organization_mismatch`. `turn_boundary` removals are not recorded (upstream 03de604b8, ported without the openai 7.59.0 bump)
@@ -17,7 +19,6 @@
 - Claude Fable 5.2 (`claude-fable-5-2`) is available from the `anthropic` provider, with Opus 5 as its server-side refusal fallback; Fable and Mythos 5.2 keep per-message effort and accept system messages mid-conversation (upstream 0d1793c2b).
 - Azure OpenAI models keep OpenAI's long-context price tier, so requests above 272K input tokens are costed at the long-context rates (upstream ea1cfcc4c).
 - OpenCode Go and Zen Claude models that accept per-message effort now send `thinking.block_binding: drop_block`, so replayed thinking is accepted after the tool list or system prompt changes (upstream 9ee7586a9).
-
 - Mistral tools are sent non-strict unless `compat.supportsStrictMode` is set, since strict tools can stall Mistral Large 4 (upstream 2c2a77f9f).
 - The Codex websocket recovers from the 60-minute connection limit (upstream #12229).
 - GPT-6.2 Astra and GPT-6.2 Sol are available from `openai`, `openai-codex` and `azure-openai-responses`, with Codex context windows of 272K (Astra) and 500K (Sol); GPT-6.2 Sol is the default for those providers (upstream e56d35ce5, cead615b4, without the carved additional tools and mid-conversation effort lists).
@@ -30,6 +31,7 @@
 - `createProvider` merges the model catalog once per publish instead of on every read (upstream #12366).
 - Bedrock SSO credentials resolve through `HTTPS_PROXY` (upstream #12365).
 - Gemini 3+ detection works for prefixed Google model IDs, and `compat.supportsStrictMode` overrides it (upstream #12371).
+
 ## [0.100.7] - 2026-11-17
 
 ### Fixed
