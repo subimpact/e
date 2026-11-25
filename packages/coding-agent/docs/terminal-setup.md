@@ -15,6 +15,7 @@ Pi uses extended-key protocols so terminals can distinguish combinations such as
 | Inline images or colors are not detected | [Override detected capabilities](#override-detected-capabilities) |
 | An IME candidate window appears in the wrong place | [WezTerm](#wezterm) or [IntelliJ IDEA](#intellij-idea-integrated-terminal) |
 | Modified keys fail only inside tmux | [Run Pi in tmux](tmux.md) |
+| After Pi exits, moving the mouse or typing puts text such as `[<35;12;5M` or `[;;;129:3u` into the shell prompt | [Recover the terminal after Pi was killed](#recover-the-terminal-after-pi-was-killed) |
 
 Use `/hotkeys` to inspect Pi's active shortcuts. See [Keybindings](keybindings.md) to change them.
 
@@ -219,3 +220,27 @@ Pi automatically detects OSC 8 hyperlinks, inline image protocols, and truecolor
 Settings take precedence over environment variables. An unset value or `auto` preserves automatic detection.
 
 Only force a capability supported by the complete terminal path. Unsupported escape sequences can corrupt rendering. See [Environment Variables](environment-variables.md#pi-process-configuration) and [Settings](settings.md) for the canonical value definitions.
+
+## Recover the terminal after Pi was killed
+
+Pi turns on key, mouse, and paste reporting while it runs, and the alternate screen in fullscreen mode. It turns them off when it exits. If Pi is killed (`kill -9`, Task Manager, out of memory), they stay on and the shell types the reports into the prompt.
+
+The real fix is to find what kills Pi and stop it. Look for `JavaScript heap out of memory` in the terminal, or a script or IDE that ends the process, and [open an issue](https://github.com/subimpact/e/issues) with what you find.
+
+To reset the terminal, run this in the affected pane. Starting and quitting Pi again is not enough.
+
+bash or zsh:
+
+```bash
+printf '\e[<16u\e[=0;1u\e[>4;0m\e[?2004;1000;1002;1003;1004;1006l\e[?7;25h'
+```
+
+PowerShell:
+
+```powershell
+$e = [char]27; [Console]::Write("$e[<16u$e[=0;1u$e[>4;0m$e[?2004;1000;1002;1003;1004;1006l$e[?7;25h")
+```
+
+If the prompt still shows Pi's last screen, also run `printf '\e[?1049l'` or `[Console]::Write("$([char]27)[?1049l")`. Only in that case: otherwise it confuses the shell's line editor.
+
+If you cannot type in the pane, start Pi in another tab and ask it: "Reset my other terminal tab with the reset sequence from Pi's terminal-setup docs." Then press `Ctrl+C` in the fixed tab to clear the line.
