@@ -6726,6 +6726,7 @@ export class InteractiveMode {
 		const yankPop = this.getEditorKeyDisplay("tui.editor.yankPop");
 		const undo = this.getEditorKeyDisplay("tui.editor.undo");
 		const tab = this.getEditorKeyDisplay("tui.input.tab");
+		const cancelAutocomplete = this.getEditorKeyDisplay("tui.select.cancel");
 
 		// App keybindings
 		const interrupt = this.getAppKeyDisplay("app.interrupt");
@@ -6773,7 +6774,8 @@ export class InteractiveMode {
 | Key | Action |
 |-----|--------|
 | \`${tab}\` | Path completion / accept autocomplete |
-| \`${interrupt}\` | Cancel autocomplete / abort streaming |
+| \`${cancelAutocomplete}\` | Cancel autocomplete |
+| \`${interrupt}\` | Abort streaming or running bash command |
 | \`${clear}\` | Clear editor (first) / exit (second) |
 | \`${exit}\` | Exit (when editor is empty) |
 | \`${suspend}\` | Suspend to background |
