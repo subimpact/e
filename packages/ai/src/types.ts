@@ -960,6 +960,8 @@ export interface AnthropicMessagesCompat {
 export interface BedrockCompat {
 	/** Whether the model supports Bedrock strict tool schemas. Default: false. */
 	supportsStrictMode?: boolean;
+	/** Whether the model accepts reasoning blocks from earlier assistant messages. When false, earlier reasoning is not sent back. The generated catalog disables this for Kimi K3 models, which fail on Converse when it is sent. Default: true. */
+	supportsReasoningReplay?: boolean;
 }
 
 /** Compatibility settings for the Google Generative AI and Vertex APIs. */
