@@ -140,17 +140,12 @@ export function buildSystemPromptSections(input: BuildSystemPromptOptions): Syst
 	}
 
 	const promptSections: Record<string, string> = {};
-	if (customPrompt) {
-		promptSections.preamble = customPrompt;
-	} else {
-		promptSections.preamble =
-			"You are an expert coding assistant operating inside e, a minimal coding agent forked from pi. You help users by reading files, executing commands, editing code, and writing new files.";
-		const visibleTools = selectedTools.filter((name) => !!toolSnippets[name]);
-		const tools =
-			visibleTools.length > 0 ? visibleTools.map((name) => `- ${name}: ${toolSnippets[name]}`).join("\n") : "(none)";
-		promptSections.tools = `${tools}\n\nIn addition to the tools above, you may have access to other custom tools depending on the project.`;
-		promptSections.rules = buildRules(selectedTools, toolGuidelines, promptGuidelines);
-		promptSections.docs = `e documentation (read only when the user asks about e itself, its SDK, extensions, themes, skills, or TUI):
+	promptSections.preamble = customPrompt ?? "You are an expert coding assistant operating inside e, a minimal coding agent forked from pi. You help users by reading files, executing commands, editing code, and writing new files.";
+	const visibleTools = selectedTools.filter((name) => !!toolSnippets[name]);
+	const tools = visibleTools.length > 0 ? visibleTools.map((name) => `- ${name}: ${toolSnippets[name]}`).join("\n") : "(none)";
+	promptSections.tools = `${tools}\n\nIn addition to the tools above, you may have access to other custom tools depending on the project.`;
+	promptSections.rules = buildRules(selectedTools, toolGuidelines, promptGuidelines);
+	promptSections.docs = `e documentation (read only when the user asks about e itself, its SDK, extensions, themes, skills, or TUI):
 - Main documentation: ${getReadmePath()}
 - Additional docs: ${getDocsPath()}
 - Examples: ${getExamplesPath()} (extensions, custom tools, SDK)
@@ -158,7 +153,6 @@ export function buildSystemPromptSections(input: BuildSystemPromptOptions): Syst
 - When asked about: extensions (docs/extensions.md, examples/extensions/), themes (docs/themes.md), skills (docs/skills.md), prompt templates (docs/prompt-templates.md), TUI components (docs/tui.md), keybindings (docs/keybindings.md), SDK integrations (docs/sdk.md), custom providers (docs/custom-provider.md), adding models (docs/models.md), extension packages (docs/packages.md), environment variables (docs/environment-variables.md)
 - When working on e topics, read the docs and examples, and follow .md cross-references before implementing
 - Always read docs .md files completely and follow links to related docs (e.g., tui.md for TUI API details)`;
-	}
 
 	if (appendSystemPrompt) promptSections.addendum = appendSystemPrompt;
 	if (contextFiles.length > 0) promptSections.project_context = renderProjectContext(contextFiles);
