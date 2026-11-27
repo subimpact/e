@@ -10,6 +10,7 @@ import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { getAgentDir } from "../config.ts";
 import { stripBom } from "../utils/text.ts";
+import { isWSL } from "../utils/wsl.ts";
 
 export interface AppKeybindings {
 	"app.interrupt": true;
@@ -63,7 +64,7 @@ export function useWindowsKeybindings(
 	platform: NodeJS.Platform = process.platform,
 	env: NodeJS.ProcessEnv = process.env,
 ): boolean {
-	return platform === "win32" || (platform === "linux" && Boolean(env.WSL_DISTRO_NAME || env.WSL_INTEROP));
+	return platform === "win32" || isWSL(platform, env);
 }
 
 declare module "@earendil-works/pi-tui" {
