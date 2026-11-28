@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+### Changed
+
+- The `ant-ling` provider maps the models.dev Ling 3.x models instead of a hardcoded list, replacing the retired Ling 2.6 and Ring 2.6 models; the default is `Ling-3.1-flash`. The deprecated `ant-ling` thinking format still works (upstream 9627ebab8, 1e7bc7213).
+
+### Fixed
+
+- Replayed Responses tool calls carry status `completed` (upstream 69a699348).
+- Google prompt blocks are reported apart from incomplete streams (upstream #12357).
+- Non-strict Anthropic tools keep their declared schema dialect (upstream 4245b07b4).
+- "Request rate increased too quickly" errors are retried (upstream #12434).
+- `finish_reason: "error"` is classified in the retry classifier, not in provider messages (upstream #12455).
+- Context overflow patterns no longer match inside longer identifiers (upstream #12438).
+- OpenRouter `native_finish_reason` is recorded, and empty stops with a failing native reason are retried (upstream ddf5868d2, 9b911b409).
+- Bedrock models with a flat `reasoning_effort` get the models.dev effort values (upstream #12551).
+- Earlier reasoning is no longer sent to Bedrock Kimi K3 models (new `supportsReasoningReplay` Bedrock compat flag) (upstream #12555).
+- Claude thinking-off support comes from the Anthropic models.dev entry (upstream #12489).
+- Removed shut down or retired models: `gpt-5-chat-latest`, Groq models, `mistral-medium-3.5`, Mistral `devstral-medium-latest` and `pixtral-12b`, Together and Qwen Token Plan models gone upstream (upstream #12450, #12453, #12449, #12552, e459be65a, #12492).
+
 ## [0.100.8] - 2026-11-24
 
 ### Added

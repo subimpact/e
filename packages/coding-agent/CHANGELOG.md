@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- `/login` reports a stored credential that does not resolve as not configured (upstream #12454).
+- `e update --self` refuses to update a Windows install run from WSL, and WSL is detected without the WSL environment variables (upstream #12457, #12634).
+- wl-copy gets an explicit `text/plain` MIME type (upstream #12446).
+- Oversized Mermaid diagrams explain why they show source (upstream #12442).
+- Rebuilt `!` output follows Ctrl+O (upstream #12427).
+- Git Bash is found through `git` on PATH on Windows (upstream #12494).
+- The highlighted `/llama` search result is confirmed after the selection moved (upstream #12537).
+- Key hints name the configured keys, including the interrupt key in the `!` cancel hint (upstream #12541, #12518).
+- `models.json` errors are reported in every mode (upstream #12523).
+- Ctrl+Break on Windows shuts down gracefully (upstream #12553).
+- Autocomplete is applied on follow-up submit (upstream 27157503e).
+- `!!` output no longer counts toward the context token estimate (upstream #12592).
+- Exported HTML keeps `$` characters (upstream #12609).
+- The `/bug` hint is reworded (upstream e3c632633).
+- Docs: `thinkingLevelMap` xhigh and max are clarified, and terminal-setup explains how to reset the terminal after the process was killed (upstream #12435, #12554, #12601).
+
 ## [0.100.8] - 2026-11-24
 
 ### Added
