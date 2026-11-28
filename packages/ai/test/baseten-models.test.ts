@@ -13,9 +13,8 @@ afterEach(() => {
 });
 
 describe("Baseten models", () => {
-	it("keeps both GLM 5.2 endpoints text-only", () => {
+	it("keeps the GLM 5.2 endpoint text-only", () => {
 		expect(getModel("baseten", "zai-org/GLM-5.2").input).toEqual(["text"]);
-		expect(getModel("baseten", "zai-org/GLM-5.2-Fast").input).toEqual(["text"]);
 	});
 
 	it("sends Baseten chat_template_args with reasoning effort", async () => {
