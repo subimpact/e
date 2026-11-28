@@ -4,6 +4,10 @@
 
 ### Fixed
 
+- Markdown after an unclosed currency dollar sign is kept (upstream #12472).
+- Synthetic right-click paste in Tabby on Windows is skipped (upstream #12473).
+- URLs over 8192 characters are not emitted as OSC 8 hyperlinks (upstream #12475).
+- Kitty image IDs stay within the signed 32-bit range, and Kitty images append without a full redraw in regular mode (upstream #12596, #12597).
 - Recognised kitty F1 to F12 sequences and ignored F13 and above (upstream #11468).
 - Display math wider than the content width falls back to raw LaTeX (upstream #11487).
 - Bare URLs stop at CJK punctuation (upstream #10934).
@@ -37,10 +41,6 @@
 ### Changed
 
 - `Home`/`End` now always move the editor cursor to the line start/end; fullscreen transcript top/bottom moved to `Ctrl+Home`/`Ctrl+End`, which no longer move the editor cursor (ported from upstream #10314).
-- Markdown after an unclosed currency dollar sign is kept (upstream #12472).
-- Synthetic right-click paste in Tabby on Windows is skipped (upstream #12473).
-- URLs over 8192 characters are not emitted as OSC 8 hyperlinks (upstream #12475).
-- Kitty image IDs stay within the signed 32-bit range, and Kitty images append without a full redraw in regular mode (upstream #12596, #12597).
 
 ## [0.99.2] - 2026-09-30
 
